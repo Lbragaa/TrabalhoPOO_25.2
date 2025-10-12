@@ -85,9 +85,6 @@ class Tabuleiro {
 
         if (c.tipo == TipoCarta.SAIDA_LIVRE) {
             // jogador guarda a carta (contador +1) e ELA NÃO VOLTA ao deck agora
-            if (jogador != null) {
-                jogador.adicionarCartaLiberacao();
-            }
             // não faz offer(c)
         } else {
             // cartas normais continuam no ciclo
@@ -96,6 +93,7 @@ class Tabuleiro {
         return c;
     }
 }
+
 
 
 
