@@ -12,18 +12,42 @@ public class Acoes {
         this.tabuleiro = tabuleiro;
     }
 
-    // 1️⃣ Lançar os dados
-    public int[] lancarDados() {//TEM QUE SER ARRAYLIST AQUI NAO PODE SER ARRAY COMUM
-        Random r = new Random();
-        return new int[] { r.nextInt(6) + 1, r.nextInt(6) + 1 };
-    }
 
-    // 2️⃣ Mover jogador
-    public void moverJogador(Jogador jogador, int somaDados) {//PASSSAR O NOVO ARRAY GERADO EM lancarDados COMO PARAMETRO E FAZER A SOMA DENTRO DESSE METODO
-        jogador.move(somaDados); //to pensando em: pra ficar AUTOMARICO, toda vez que o jogador se mover, depois dessa função .move chamar o metodo: pagaaluguel
-        //chamar aqui um pagaaluguel e trocar o parametre que ele recebe, ao inves de ser propriedade, ser POSICAO, ai checa se existe alguma propriedade naquela posicao, se existir, ele PAGA
-        // pra isso usar tabuleiro, que tem uma lista de propriedades, e a partir dessa lista de propriedades, pegar a posição delas e ver se a posição atual do jogador é = a alguma
+// O método agora promete retornar qualquer tipo de Lista
+    public List<Integer> lancarDados() {
+        Random r = new Random();
+        List<Integer> dados = new ArrayList<>();
+        dados.add(r.nextInt(6) + 1);
+        dados.add(r.nextInt(6) + 1);
+        return dados;
     }
+    /** Checa se saiu dupla para liberar da cadeia. */
+    private static boolean ehDupla(List<Integer> dados) {
+        return dados != null && dados.size() >= 2
+                && dados.get(0) != null && dados.get(1) != null
+                && dados.get(0).intValue() == dados.get(1).intValue();
+    }
+    // 2️⃣ Mover jogador
+    public void moverJogador(Jogador jogador, List<Integer> dados) {
+        if (jogador == null || dados == null || dados.isEmpty()) return;
+
+        int somaDados = 0;
+        for (Integer d : dados) {
+            if (d != null) somaDados += d;
+        }
+
+        // Move (sua lógica de wrap/“passou pelo início” permanece no Jogador)
+        jogador.move(somaDados);
+
+        // Resolve cobrança de aluguel automaticamente (Regra 5)
+        Propriedade prop = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
+        if (prop != null) {
+            pagarAluguel(jogador, prop);
+        }
+
+        // DEPOIS incluir mais efeitos automaticos aqui 
+    }
+    
 
     // 3️⃣ Comprar propriedade (sem dono)
     public void comprarPropriedade(Jogador jogador, Propriedade propriedade) {
@@ -38,7 +62,7 @@ public class Acoes {
     }
 
     // 4️⃣ Construir casa (apenas terrenos)
-    public void construirCasa(Jogador jogador, Propriedade propriedade) {
+    public void construirCasa(Jogador jogador, Propriedade propriedade) { 
         if (propriedade instanceof Terreno terreno) {
             if (terreno.getProprietario() == jogador && terreno.podeConstruir()) {
                 boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getValorCasa());
@@ -64,7 +88,8 @@ public class Acoes {
     }
 
     // 6️⃣ Verificar prisão (entrada/saída)
-    public void verificarPrisao(Jogador jogador, boolean dadosIguais) {
+    public void verificarPrisao(Jogador jogador, List<Integer> dados) {
+        boolean dadoIguais = ehDupla(dados);
         if (jogador.estaPreso() && dadosIguais) {
             jogador.solta();
         } else if (tabuleiro.isCasaPrisao(jogador.getPosicao())) {
@@ -90,6 +115,7 @@ public class Acoes {
         return false;
     }
 }
+
 
 
 
