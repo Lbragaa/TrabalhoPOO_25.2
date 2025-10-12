@@ -79,16 +79,37 @@ public class Acoes {
     }
 
     // 5️⃣ Pagar aluguel automaticamente
+    // Em Acoes.java (mesmo package 'model')
     public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
-        Jogador dono = propriedade.getProprietario();
-        if (dono != null && dono != jogador) {
-            int aluguel = propriedade.calculaAluguel();
-            boolean pagou = jogador.getConta().paga(dono.getConta(), aluguel);
-            if (!pagou) {
-                verificarFalencia(jogador);
+        if (jogador == null || propriedade == null) return;
+    
+        // Se não há dono ou o dono é o próprio jogador, não paga
+        Jogador dono = propriedade.proprietario; // campo protegido; OK no mesmo package
+        if (dono == null || dono == jogador) return;
+    
+        int valorAPagar;
+    
+        if (propriedade instanceof Terreno) {
+            Terreno t = (Terreno) propriedade;
+    
+            // Regra atualizada: "pelo menos 1 casa"
+            if (t.getNumCasas() >= 1) {
+                valorAPagar = t.calculaAluguel(); // terreno com casas: usa cálculo do terreno
+            } else {
+                // Else explícito: não paga nada e retorna
+                return;
             }
+        } else {
+            // Propriedade genérica (sem casas): paga aluguel base
+            valorAPagar = propriedade.aluguelBase; // protegido; OK no mesmo package
+        }
+    
+        boolean pagou = jogador.getConta().paga(dono.getConta(), valorAPagar);
+        if (!pagou) {
+            verificarFalencia(jogador);
         }
     }
+
 
     // 6️⃣ Verificar prisão (entrada/saída)
     public void verificarPrisao(Jogador jogador) {
@@ -147,6 +168,7 @@ public class Acoes {
         return false;
     }
 }
+
 
 
 
