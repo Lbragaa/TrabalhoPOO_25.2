@@ -1,6 +1,6 @@
 package model;
 
-public class ContaBancaria {
+class ContaBancaria {
 
     private int saldo;
 

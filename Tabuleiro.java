@@ -3,7 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Tabuleiro {
+class Tabuleiro {
 
     // Número padrão de casas no Banco Imobiliário
     private static final int NUM_CASAS = 40;

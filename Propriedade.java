@@ -1,6 +1,6 @@
 package model;
 
-public abstract class Propriedade {
+abstract class Propriedade {
 
     protected String nome;
     protected Jogador proprietario;

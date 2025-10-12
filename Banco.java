@@ -1,6 +1,6 @@
 package model;
 
-public class Banco {
+class Banco {
 
     private ContaBancaria conta;
 

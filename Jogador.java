@@ -1,6 +1,6 @@
 package model;
 
-public class Jogador {
+class Jogador {
 
     private String nome;
     private ContaBancaria conta;

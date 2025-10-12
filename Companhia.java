@@ -1,6 +1,6 @@
 package model;
 
-public class Companhia extends Propriedade {
+class Companhia extends Propriedade {
 
     private int multiplicadorAluguel; // Valor usado para calcular o aluguel
 

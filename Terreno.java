@@ -1,6 +1,6 @@
 package model;
 
-public class Terreno extends Propriedade {
+class Terreno extends Propriedade {
 
     private int numCasas;
 
