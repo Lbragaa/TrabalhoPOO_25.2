@@ -39,7 +39,7 @@ class Tabuleiro {
     public boolean isCasaPrisao(int posicao) {
         return posicao == POSICAO_PRISAO;
     }
-        // Método auxiliar temporário para testes
+    //---------------------MÉTODOS AUXILIARES PRA TESTE--------------------------
     public void inicializarBaralhoTeste() {
         if (baralhoSorteReves == null) return;
 
@@ -50,6 +50,73 @@ class Tabuleiro {
         baralhoSorteReves.offer(new Carta("SAIALIVRE", 0));
         baralhoSorteReves.offer(new Carta("PAGAR", 100));
         baralhoSorteReves.offer(new Carta("RECEBER", 200));
+    }
+    private void inicializarPropriedades() {e a 0 (início/saída).
+        // - Ajuste posições, nomes e valores para o seu tabuleiro definitivo.
+        // Exemplo de mapeamento simples de posições (ajuste conforme seu layout):
+        // Obs.: use valores coerentes com sua economia de jogo
+        // Terrenos: nome, preco, valorCasa, aluguelBase
+        Propriedade p;
+
+        p = new Terreno("Terreno — Vila Azul",        120,  50,  20);  p.setPosicao(1);  propriedades.add(p);
+        p = new PropriedadeComum("Praça Municipal",    100,       18);  p.setPosicao(3);  propriedades.add(p);
+        p = new Terreno("Terreno — Jardim Verde",     140,  50,  22);  p.setPosicao(6);  propriedades.add(p);
+        p = new PropriedadeComum("Estação Rodoviária", 200,       25);  p.setPosicao(8);  propriedades.add(p);
+
+        p = new Terreno("Terreno — Centro",           180, 100,  30);  p.setPosicao(11); propriedades.add(p);
+        p = new PropriedadeComum("Mercado Popular",    160,       26);  p.setPosicao(13); propriedades.add(p);
+        p = new Terreno("Terreno — Orla",             200, 100,  34);  p.setPosicao(14); propriedades.add(p);
+        p = new PropriedadeComum("Aeroporto Regional", 260,       40);  p.setPosicao(16); propriedades.add(p);
+
+        p = new Terreno("Terreno — Parque Norte",     220, 150,  40);  p.setPosicao(19); propriedades.add(p);
+        p = new PropriedadeComum("Porto",              240,       38);  p.setPosicao(21); propriedades.add(p);
+        p = new Terreno("Terreno — Bairro Alto",      260, 150,  46);  p.setPosicao(24); propriedades.add(p);
+        p = new PropriedadeComum("Usina Hidrelétrica", 280,       45);  p.setPosicao(25); propriedades.add(p);
+
+        p = new Terreno("Terreno — Zona Sul",         300, 200,  50);  p.setPosicao(27); propriedades.add(p);
+        p = new PropriedadeComum("Shopping Center",    300,       55);  p.setPosicao(29); propriedades.add(p);
+        p = new Terreno("Terreno — Lagoa",            320, 200,  58);  p.setPosicao(31); propriedades.add(p);
+        p = new PropriedadeComum("Terminal de Cargas", 320,       60);  p.setPosicao(34); propriedades.add(p);
+
+        p = new Terreno("Terreno — Avenida Central",  360, 250,  65);  p.setPosicao(37); propriedades.add(p);
+        p = new PropriedadeComum("Estação Central",    360,       70);  p.setPosicao(39); propriedades.add(p);
+
+        // Observação:
+        // - Evitei a posição 10 (prisão), 26(vai pra prisao)
+    }
+    // ---------- INICIALIZAÇÃO DE JOGADORES ----------
+    public void inicializarJogadores(java.util.List<String> nomes) {
+        if (nomes == null || nomes.isEmpty()) {
+            throw new IllegalArgumentException("Lista de nomes de jogadores não pode ser vazia.");
+        }
+    
+        // Zera jogadores anteriores e recria do zero (estado limpo)
+        this.jogadoresAtivos.clear();
+    
+        for (String nome : nomes) {
+            if (nome == null || nome.trim().isEmpty()) {
+                throw new IllegalArgumentException("Nome de jogador inválido.");
+            }
+            Jogador j = new Jogador(nome.trim());
+            // Se no futuro você quiser fixar alguma regra extra de start, faça aqui
+            // ex: j.getConta().setSaldo(4000); (já é feito no construtor)
+            //     j.setPosicao(0); (já é feito no construtor)
+            this.jogadoresAtivos.add(j);
+        }
+    }
+
+    /**
+     * Atalho: cria N jogadores com nomes "Jogador 1", "Jogador 2", ...
+     */
+    public void inicializarJogadores(int quantidade) {
+        if (quantidade < 2) {
+            throw new IllegalArgumentException("É necessário pelo menos 2 jogadores.");
+        }
+        java.util.List<String> nomes = new java.util.ArrayList<>();
+        for (int i = 1; i <= quantidade; i++) {
+            nomes.add("Jogador " + i);
+        }
+        inicializarJogadores(nomes);
     }
 
     // ---------- PROPRIEDADES ----------
@@ -113,6 +180,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
 }
 }
+
 
 
 
