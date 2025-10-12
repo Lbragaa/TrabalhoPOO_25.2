@@ -58,27 +58,27 @@ class Tabuleiro {
         // Terrenos: nome, preco, valorCasa, aluguelBase
         Propriedade p;
         p = new Terreno("Terreno — Vila Azul",        120,  50,  20);  p.setPosicao(1);  propriedades.add(p);
-        p = new PropriedadeComum("Praça Municipal",    100,       18);  p.setPosicao(3);  propriedades.add(p);
+        p = new Propriedade("Praça Municipal",    100,       18);  p.setPosicao(3);  propriedades.add(p);
         p = new Terreno("Terreno — Jardim Verde",     140,  50,  22);  p.setPosicao(6);  propriedades.add(p);
-        p = new PropriedadeComum("Estação Rodoviária", 200,       25);  p.setPosicao(8);  propriedades.add(p);
+        p = new Propriedade("Estação Rodoviária", 200,       25);  p.setPosicao(8);  propriedades.add(p);
 
         p = new Terreno("Terreno — Centro",           180, 100,  30);  p.setPosicao(11); propriedades.add(p);
-        p = new PropriedadeComum("Mercado Popular",    160,       26);  p.setPosicao(13); propriedades.add(p);
+        p = new Propriedade("Mercado Popular",    160,       26);  p.setPosicao(13); propriedades.add(p);
         p = new Terreno("Terreno — Orla",             200, 100,  34);  p.setPosicao(14); propriedades.add(p);
-        p = new PropriedadeComum("Aeroporto Regional", 260,       40);  p.setPosicao(16); propriedades.add(p);
+        p = new Propriedade("Aeroporto Regional", 260,       40);  p.setPosicao(16); propriedades.add(p);
 
         p = new Terreno("Terreno — Parque Norte",     220, 150,  40);  p.setPosicao(19); propriedades.add(p);
-        p = new PropriedadeComum("Porto",              240,       38);  p.setPosicao(21); propriedades.add(p);
+        p = new Propriedade("Porto",              240,       38);  p.setPosicao(21); propriedades.add(p);
         p = new Terreno("Terreno — Bairro Alto",      260, 150,  46);  p.setPosicao(24); propriedades.add(p);
-        p = new PropriedadeComum("Usina Hidrelétrica", 280,       45);  p.setPosicao(25); propriedades.add(p);
+        p = new Propriedade("Usina Hidrelétrica", 280,       45);  p.setPosicao(25); propriedades.add(p);
 
         p = new Terreno("Terreno — Zona Sul",         300, 200,  50);  p.setPosicao(27); propriedades.add(p);
-        p = new PropriedadeComum("Shopping Center",    300,       55);  p.setPosicao(29); propriedades.add(p);
+        p = new Propriedade("Shopping Center",    300,       55);  p.setPosicao(29); propriedades.add(p);
         p = new Terreno("Terreno — Lagoa",            320, 200,  58);  p.setPosicao(31); propriedades.add(p);
-        p = new PropriedadeComum("Terminal de Cargas", 320,       60);  p.setPosicao(34); propriedades.add(p);
+        p = new Propriedade("Terminal de Cargas", 320,       60);  p.setPosicao(34); propriedades.add(p);
 
         p = new Terreno("Terreno — Avenida Central",  360, 250,  65);  p.setPosicao(37); propriedades.add(p);
-        p = new PropriedadeComum("Estação Central",    360,       70);  p.setPosicao(39); propriedades.add(p);
+        p = new Propriedade("Estação Central",    360,       70);  p.setPosicao(39); propriedades.add(p);
 
         // Observação:
         // - Evitei a posição 10 (prisão), 26(vai pra prisao)
@@ -179,6 +179,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
 }
 }
+
 
 
 
