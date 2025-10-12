@@ -64,8 +64,16 @@ class Tabuleiro {
     public List<Jogador> getJogadoresAtivos() {
         return jogadoresAtivos;
     }
-
+    public Propriedade getPropriedadeNaPosicao(int pos) {
+        for (Propriedade p : propriedades) {
+            if (p != null && p.getPosicao() == pos) {
+                return p;
+            }
+        }
+        return null;
+    }
     public boolean estaNoJogo(Jogador jogador) {
         return jogadoresAtivos.contains(jogador);
     }
 }
+
