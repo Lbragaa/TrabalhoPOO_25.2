@@ -74,15 +74,17 @@ public void move(int casas, Banco banco) {
     }
 
     // --------- OUTROS ---------
-    public void receberDoBanco(int valor) {
-        Banco banco = new Banco();
-        banco.pagarPara(conta, valor);
-    }
 
-    public void pagarAoBanco(int valor) {
-        Banco banco = new Banco();
-        banco.receberPagamento(conta, valor);
-    }
+    // Antes tava toda hora criando um banco novo. Desse jeito, o metodo de jogador espera que exista algum banco que ira pagar ou receber.
+    // Tem que considerar tambem que esses metodos nao estao sendo usados. A maioria das coisas esta sendo feita com os metodos de conta, ou de banco, tudo controlado pelo Acoes.
+    public void pagarAoBanco(Banco banco, int valor) {
+    banco.receberPagamento(this, valor);
+}
+
+public void receberDoBanco(Banco banco, int valor) {
+    banco.pagarPara(conta, valor);
+}
+
      /**
      * Consome 1 carta de liberação, se houver.
      * @return true se consumiu; false se não tinha.
