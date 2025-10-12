@@ -42,6 +42,7 @@ public class Acoes {
         jogador.move(somaDados, banco); // passa o banco atual para possivelmente pagar o jogador
 
         // Resolve cobrança de aluguel automaticamente (Regra 5)
+        // Aqui vai ocorrer a checagem se o jogador caiu em alguma propriedade
         Propriedade prop = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
         if (prop != null) {
             pagarAluguel(jogador, prop);

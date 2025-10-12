@@ -1,7 +1,9 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 class Tabuleiro {
 
@@ -37,6 +39,18 @@ class Tabuleiro {
     public boolean isCasaPrisao(int posicao) {
         return posicao == POSICAO_PRISAO;
     }
+        // Método auxiliar temporário para testes
+    public void inicializarBaralhoTeste() {
+        if (baralhoSorteReves == null) return;
+
+        baralhoSorteReves.clear();
+
+        // Cartas simples apenas para testar comportamentos básicos
+        baralhoSorteReves.offer(new Carta("VAIPRAPRISAO", 0));
+        baralhoSorteReves.offer(new Carta("SAIALIVRE", 0));
+        baralhoSorteReves.offer(new Carta("PAGAR", 100));
+        baralhoSorteReves.offer(new Carta("RECEBER", 200));
+    }
 
     // ---------- PROPRIEDADES ----------
     public void addPropriedade(Propriedade p) {
@@ -67,14 +81,16 @@ class Tabuleiro {
     public List<Jogador> getJogadoresAtivos() {
         return jogadoresAtivos;
     }
-    public Propriedade getPropriedadeNaPosicao(int pos) {
+    
+    public Propriedade getPropriedadeNaPosicao(int posicao) {
         for (Propriedade p : propriedades) {
-            if (p != null && p.getPosicao() == pos) {
+            if (p.getPosicao() == posicao) {
                 return p;
             }
         }
         return null;
     }
+
     public boolean estaNoJogo(Jogador jogador) {
         return jogadoresAtivos.contains(jogador);
     }

@@ -7,6 +7,7 @@ abstract class Propriedade {
     protected int preco;
     protected int valorCasa;   // Some subclasses might not use this
     protected int aluguelBase;
+    protected int posicao;
 
     public Propriedade(String nome, int preco, int aluguelBase) {
         this.nome = nome;
@@ -38,6 +39,14 @@ abstract class Propriedade {
 
     public boolean estaDisponivel() {
         return proprietario == null;
+    }
+
+    public int getPosicao() {
+    return posicao;
+    }
+
+    public void setPosicao(int posicao) {
+    this.posicao = posicao;
     }
 
     // --------- REGRAS GERAIS ---------
