@@ -96,6 +96,25 @@ public class Acoes {
             jogador.prende();
         }
     }
+    // pegandoo as cartas aq
+    public void puxarSorteReves(Jogador j) {
+        Carta c = tabuleiro.comprarCartaSorteReves();
+        switch (c.tipo) {
+            case VAI_PARA_PRISAO -> entrarNaPrisaoPorCarta(j);
+            case SAIDA_LIVRE     -> j.adicionarCartaLiberacao(); // jogador guarda; deck já NÃO reintroduziu SOMA +1 nas cartas de liberação
+            case PAGAR           -> { j.getConta().paga(banco.getConta(), c.valor); verificarFalencia(j); } //paga o valor da carta se for desse tipo
+            case RECEBER         -> banco.getConta().paga(j.getConta(), c.valor); // tem que ver se ta certo isso aqui sla 
+        }
+    }
+
+    public boolean usarCartaLiberacao(Jogador j) {
+        if (j == null || !j.estaPreso()) return false;
+        if (!j.consumirCartaLiberacao()) return false;
+        tabuleiro.devolverCartaLiberacao(); // volta uma SAÍDA_LIVRE pro fim da fila
+        j.solta();
+        return true;
+    }
+
 
     // 7️⃣ Verificar falência e remover jogador do jogo
     public boolean verificarFalencia(Jogador jogador) {
@@ -115,6 +134,7 @@ public class Acoes {
         return false;
     }
 }
+
 
 
 
