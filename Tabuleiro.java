@@ -35,7 +35,7 @@ class Tabuleiro {
     }
 
     public static int getPosicaoPrisao() {
-        return POSICAO_VAI_PRA_PRISA;
+        return POSICAO_VAI_PRA_PRISAO;
     }
 
     public boolean isCasaPrisao(int posicao) {
@@ -181,6 +181,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
     }
 }
+
 
 
 
