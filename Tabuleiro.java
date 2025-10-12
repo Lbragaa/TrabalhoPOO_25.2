@@ -16,6 +16,9 @@ class Tabuleiro {
     // Lista de jogadores ativos na partida
     private List<Jogador> jogadoresAtivos;
 
+    // Lista de baralho usando FILA, sempre compra no início e coloca no fim do baralhp
+    private final Queue<Carta> baralhoSorteReves = new LinkedList<>();
+    
     // ---------- CONSTRUTOR ----------
     public Tabuleiro() {
         this.propriedades = new ArrayList<>();
@@ -76,4 +79,5 @@ class Tabuleiro {
         return jogadoresAtivos.contains(jogador);
     }
 }
+
 
