@@ -179,8 +179,9 @@ class Tabuleiro {
     //Quando o jogador usa a carta ele tem que devolver pro final da fila, isso acontece la na ação quando ele ta preso e usa a carta pra sair
     void devolverCartaLiberacao() {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
+    }
 }
-}
+
 
 
 
