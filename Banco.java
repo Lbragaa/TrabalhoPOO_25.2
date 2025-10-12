@@ -25,6 +25,7 @@ class Banco {
 
     // Facilita o pagamento feito pelo banco
     public boolean pagarPara(ContaBancaria destino, int valor) {
+        if (valor <= 0) return false;
         return this.conta.paga(destino, valor);
     }
 

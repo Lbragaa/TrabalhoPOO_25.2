@@ -18,20 +18,16 @@ class Jogador {
     }
 
     // --------- MOVIMENTAÇÃO ---------
-    public void move(int casas) {
-        int novaPosicao = posicao + casas;
+public void move(int casas, Banco banco) {
+    int novaPosicao = posicao + casas;
 
-        // Tabuleiro padrão com 40 casas
-        if (novaPosicao >= Tabuleiro.getNumCasas()) {
-            novaPosicao %= Tabuleiro.getNumCasas();
-
-            // Ao passar pela saída, recebe $200 do banco
-            Banco banco = new Banco();
-            banco.pagarPara(conta, 200);
-        }
-
-        this.posicao = novaPosicao;
+    if (novaPosicao >= Tabuleiro.getNumCasas()) {
+        novaPosicao %= Tabuleiro.getNumCasas();
+        banco.pagarPara(conta, 200); // shared banco, nao fica criando toda hora um banco novo
     }
+
+    this.posicao = novaPosicao;
+}
 
     // --------- PRISÃO ---------
     public void prende() {

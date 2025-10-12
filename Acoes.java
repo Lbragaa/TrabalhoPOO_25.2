@@ -1,6 +1,8 @@
 package model;
 
 import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Acoes {
 
@@ -37,7 +39,7 @@ public class Acoes {
         }
 
         // Move (sua lógica de wrap/“passou pelo início” permanece no Jogador)
-        jogador.move(somaDados);
+        jogador.move(somaDados, banco); // passa o banco atual para possivelmente pagar o jogador
 
         // Resolve cobrança de aluguel automaticamente (Regra 5)
         Propriedade prop = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
@@ -127,7 +129,7 @@ public class Acoes {
     public 
 
     // 7️⃣ Verificar falência e remover jogador do jogo
-    public boolean verificarFalencia(Jogador jogador) {
+    boolean verificarFalencia(Jogador jogador) {
         
         if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
             jogador.setFalido(true);
