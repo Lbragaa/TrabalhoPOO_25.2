@@ -133,7 +133,7 @@ public class Acoes {
     public void puxarSorteReves(Jogador j) {
         Carta c = tabuleiro.comprarCartaSorteReves();
         switch (c.tipo) {
-            case VAI_PARA_PRISAO -> entrarNaPrisaoPorCarta(j);
+            case VAI_PARA_PRISAO -> j.prende();
             case SAIDA_LIVRE     -> j.adicionarCartaLiberacao(); // jogador guarda; deck já NÃO reintroduziu SOMA +1 nas cartas de liberação
             case PAGAR           -> { j.getConta().paga(banco.getConta(), c.valor); verificarFalencia(j); } //paga o valor da carta se for desse tipo
             case RECEBER         -> banco.getConta().paga(j.getConta(), c.valor); // tem que ver se ta certo isso aqui sla 
@@ -168,6 +168,7 @@ public class Acoes {
         return false;
     }
 }
+
 
 
 
