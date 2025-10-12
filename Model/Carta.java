@@ -1,4 +1,4 @@
-package model;
+package Model;
 
 enum TipoCarta {
     VAI_PARA_PRISAO,
