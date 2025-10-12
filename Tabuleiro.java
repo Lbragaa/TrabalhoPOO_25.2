@@ -85,7 +85,7 @@ class Tabuleiro {
         // - Evitei a posição 10 (prisão), 26(vai pra prisao)
     }
     // ---------- INICIALIZAÇÃO DE JOGADORES ----------
-    public void inicializarJogadores(java.util.List<String> nomes) {
+    public void inicializarJogadores(List<String> nomes) {
         if (nomes == null || nomes.isEmpty()) {
             throw new IllegalArgumentException("Lista de nomes de jogadores não pode ser vazia.");
         }
@@ -180,6 +180,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
 }
 }
+
 
 
 
