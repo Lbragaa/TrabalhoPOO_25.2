@@ -13,7 +13,7 @@ public class Acoes {
     }
 
     // 1️⃣ Lançar os dados
-    public int[] lancarDados() {
+    public int[] lancarDados() {//TEM QUE SER ARRAYLIST AQUI NAO PODE SER ARRAY COMUM
         Random r = new Random();
         return new int[] { r.nextInt(6) + 1, r.nextInt(6) + 1 };
     }
@@ -88,3 +88,4 @@ public class Acoes {
         return false;
     }
 }
+
