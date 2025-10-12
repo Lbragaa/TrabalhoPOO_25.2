@@ -20,12 +20,13 @@ class Tabuleiro {
     private List<Jogador> jogadoresAtivos;
 
     // Lista de baralho usando FILA, sempre compra no início e coloca no fim do baralhp
-    private final Queue<Carta> baralhoSorteReves = new LinkedList<>();
+    private final Queue<Carta> baralhoSorteReves;
     
     // ---------- CONSTRUTOR ----------
     public Tabuleiro() {
         this.propriedades = new ArrayList<>();
         this.jogadoresAtivos = new ArrayList<>();
+        this.baralhoSorteReves = new LinkedList<>();
     }
 
     // ---------- MÉTODOS ESTÁTICOS ----------
@@ -180,6 +181,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
 }
 }
+
 
 
 
