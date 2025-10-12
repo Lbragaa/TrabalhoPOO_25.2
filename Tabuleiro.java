@@ -78,6 +78,24 @@ class Tabuleiro {
     public boolean estaNoJogo(Jogador jogador) {
         return jogadoresAtivos.contains(jogador);
     }
+    //--------------- CARTAS -------------
+    public Carta comprarCartaSorteReves(Jogador jogador) {
+        Carta c = baralhoSorteReves.poll();
+        if (c == null) throw new IllegalStateException("Baralho de Sorte/Revés vazio.");
+
+        if (c.tipo == TipoCarta.SAIDA_LIVRE) {
+            // jogador guarda a carta (contador +1) e ELA NÃO VOLTA ao deck agora
+            if (jogador != null) {
+                jogador.adicionarCartaLiberacao();
+            }
+            // não faz offer(c)
+        } else {
+            // cartas normais continuam no ciclo
+            baralhoSorteReves.offer(c);
+        }
+        return c;
+    }
 }
+
 
 
