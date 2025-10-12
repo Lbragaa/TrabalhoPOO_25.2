@@ -20,7 +20,9 @@ public class Acoes {
 
     // 2️⃣ Mover jogador
     public void moverJogador(Jogador jogador, int somaDados) {//PASSSAR O NOVO ARRAY GERADO EM lancarDados COMO PARAMETRO E FAZER A SOMA DENTRO DESSE METODO
-        jogador.move(somaDados);
+        jogador.move(somaDados); //to pensando em: pra ficar AUTOMARICO, toda vez que o jogador se mover, depois dessa função .move chamar o metodo: pagaaluguel
+        //chamar aqui um pagaaluguel e trocar o parametre que ele recebe, ao inves de ser propriedade, ser POSICAO, ai checa se existe alguma propriedade naquela posicao, se existir, ele PAGA
+        // pra isso usar tabuleiro, que tem uma lista de propriedades, e a partir dessa lista de propriedades, pegar a posição delas e ver se a posição atual do jogador é = a alguma
     }
 
     // 3️⃣ Comprar propriedade (sem dono)
@@ -88,5 +90,6 @@ public class Acoes {
         return false;
     }
 }
+
 
 
