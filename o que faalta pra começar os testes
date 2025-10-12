@@ -1,2 +1,4 @@
 faltam so os casos de prisao e liberação da prisao por cartas
 e tem algumas classes que estao publicas ainda, tem que botar privadas
+
+CONFERIR SE OS TESTES VAO DAR CERTO PRO QUE EU FIZ com as cartas e os commits
