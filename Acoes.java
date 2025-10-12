@@ -19,7 +19,7 @@ public class Acoes {
     }
 
     // 2️⃣ Mover jogador
-    public void moverJogador(Jogador jogador, int somaDados) {
+    public void moverJogador(Jogador jogador, int somaDados) {//PASSSAR O NOVO ARRAY GERADO EM lancarDados COMO PARAMETRO E FAZER A SOMA DENTRO DESSE METODO
         jogador.move(somaDados);
     }
 
@@ -88,4 +88,5 @@ public class Acoes {
         return false;
     }
 }
+
 
