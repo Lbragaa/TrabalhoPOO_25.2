@@ -7,13 +7,14 @@ class Jogador {
     private int posicao;
     private boolean preso;
     private boolean falido;
-
+    private int cartasLiberacao;
     public Jogador(String nome) {
         this.nome = nome;
         this.conta = new ContaBancaria(4000); // Cada jogador começa com $4000
         this.posicao = 0;                     // Casa inicial
         this.preso = false;
         this.falido = false;
+        this.cartasLiberacao = 0;
     }
 
     // --------- MOVIMENTAÇÃO ---------
@@ -41,12 +42,17 @@ class Jogador {
     public void solta() {
         this.preso = false;
     }
-
+    void adicionarCartaLiberacao() {
+        this.cartasLiberacao++;
+    }
+    
     // --------- GETTERS E SETTERS ---------
     public ContaBancaria getConta() {
         return conta;
     }
-
+    public int getCartasLiberacao() {
+        return this.cartasLiberacao;
+    }
     public int getPosicao() {
         return posicao;
     }
@@ -81,4 +87,16 @@ class Jogador {
         Banco banco = new Banco();
         banco.receberPagamento(conta, valor);
     }
+     /**
+     * Consome 1 carta de liberação, se houver.
+     * @return true se consumiu; false se não tinha.
+     */
+    boolean consumirCartaLiberacao() {
+        if (this.cartasLiberacao > 0) {
+            this.cartasLiberacao--;
+            return true;
+        }
+        return false;
+    }
 }
+
