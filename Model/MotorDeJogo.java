@@ -150,8 +150,6 @@ public class MotorDeJogo {
         return true;
     }
 
-    public 
-
     // 7️⃣ Verificar falência e remover jogador do jogo
     boolean verificarFalencia(Jogador jogador) {
         
