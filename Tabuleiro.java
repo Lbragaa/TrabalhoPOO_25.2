@@ -1,17 +1,28 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Tabuleiro {
 
     // Número padrão de casas no Banco Imobiliário
     private static final int NUM_CASAS = 40;
-
     // Posição da prisão (geralmente casa 10)
     private static final int POSICAO_PRISAO = 10;
 
+    // Lista de propriedades existentes no tabuleiro
+    private List<Propriedade> propriedades;
+
+    // Lista de jogadores ativos na partida
+    private List<Jogador> jogadoresAtivos;
+
+    // ---------- CONSTRUTOR ----------
     public Tabuleiro() {
-        // Nenhum atributo complexo ainda — sem necessidade de casas detalhadas nesta iteração
+        this.propriedades = new ArrayList<>();
+        this.jogadoresAtivos = new ArrayList<>();
     }
 
+    // ---------- MÉTODOS ESTÁTICOS ----------
     public static int getNumCasas() {
         return NUM_CASAS;
     }
@@ -20,8 +31,41 @@ public class Tabuleiro {
         return POSICAO_PRISAO;
     }
 
-    // Verifica se uma posição é a prisão
     public boolean isCasaPrisao(int posicao) {
         return posicao == POSICAO_PRISAO;
+    }
+
+    // ---------- PROPRIEDADES ----------
+    public void addPropriedade(Propriedade p) {
+        propriedades.add(p);
+    }
+
+    public List<Propriedade> getPropriedades() {
+        return propriedades;
+    }
+
+    public void limparPropriedadesDe(Jogador jogador) {
+        for (Propriedade p : propriedades) {
+            if (p.getProprietario() == jogador) {
+                p.setProprietario(null);
+            }
+        }
+    }
+
+    // ---------- JOGADORES ----------
+    public void addJogador(Jogador jogador) {
+        jogadoresAtivos.add(jogador);
+    }
+
+    public void removerJogador(Jogador jogador) {
+        jogadoresAtivos.remove(jogador);
+    }
+
+    public List<Jogador> getJogadoresAtivos() {
+        return jogadoresAtivos;
+    }
+
+    public boolean estaNoJogo(Jogador jogador) {
+        return jogadoresAtivos.contains(jogador);
     }
 }

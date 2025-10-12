@@ -12,47 +12,56 @@ public class Acoes {
         this.tabuleiro = tabuleiro;
     }
 
-    // 1️⃣ Roll dice
+    // 1️⃣ Lançar os dados
     public int[] lancarDados() {
         Random r = new Random();
         return new int[] { r.nextInt(6) + 1, r.nextInt(6) + 1 };
     }
 
-    // 2️⃣ Move player
+    // 2️⃣ Mover jogador
     public void moverJogador(Jogador jogador, int somaDados) {
         jogador.move(somaDados);
     }
 
-    // 3️⃣ Buy property (unowned)
-    public void comprarPropriedade(Jogador jogador, Terreno terreno) {
-        if (terreno.getProprietario() == null) {
-            boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getPreco());
+    // 3️⃣ Comprar propriedade (sem dono)
+    public void comprarPropriedade(Jogador jogador, Propriedade propriedade) {
+        if (propriedade.estaDisponivel()) {
+            boolean pagou = jogador.getConta().paga(banco.getConta(), propriedade.getPreco());
             if (pagou) {
-                terreno.setProprietario(jogador);
+                propriedade.setProprietario(jogador);
             } else {
-                jogador.setFalido(true);
+                verificarFalencia(jogador);
             }
         }
     }
 
-    // 4️⃣ Build a house (on owned property)
-    public void construirCasa(Jogador jogador, Terreno terreno) {
-        if (terreno.getProprietario() == jogador && terreno.podeConstruir()) {
-            boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getValorCasa());
-            if (pagou) terreno.adicionaCasa();
+    // 4️⃣ Construir casa (apenas terrenos)
+    public void construirCasa(Jogador jogador, Propriedade propriedade) {
+        if (propriedade instanceof Terreno terreno) {
+            if (terreno.getProprietario() == jogador && terreno.podeConstruir()) {
+                boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getValorCasa());
+                if (pagou) {
+                    terreno.adicionaCasa();
+                } else {
+                    verificarFalencia(jogador);
+                }
+            }
         }
     }
 
-    // 5️⃣ Pay rent automatically
-    public void pagarAluguel(Jogador jogador, Terreno terreno) {
-        Jogador dono = terreno.getProprietario();
-        if (dono != null && dono != jogador && terreno.getNumCasas() >= 1) {
-            boolean pagou = jogador.getConta().paga(dono.getConta(), terreno.calculaAluguel());
-            if (!pagou) jogador.setFalido(true);
+    // 5️⃣ Pagar aluguel automaticamente
+    public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
+        Jogador dono = propriedade.getProprietario();
+        if (dono != null && dono != jogador) {
+            int aluguel = propriedade.calculaAluguel();
+            boolean pagou = jogador.getConta().paga(dono.getConta(), aluguel);
+            if (!pagou) {
+                verificarFalencia(jogador);
+            }
         }
     }
 
-    // 6️⃣ Jail logic (enter/exit)
+    // 6️⃣ Verificar prisão (entrada/saída)
     public void verificarPrisao(Jogador jogador, boolean dadosIguais) {
         if (jogador.estaPreso() && dadosIguais) {
             jogador.solta();
@@ -61,10 +70,19 @@ public class Acoes {
         }
     }
 
-    // 7️⃣ Check bankruptcy
+    // 7️⃣ Verificar falência e remover jogador do jogo
     public boolean verificarFalencia(Jogador jogador) {
-        if (jogador.getConta().getSaldo() < 0) {
+        
+        if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
             jogador.setFalido(true);
+
+            // Libera todas as propriedades do jogador
+            tabuleiro.limparPropriedadesDe(jogador);
+
+            // Remove o jogador do tabuleiro
+            tabuleiro.removerJogador(jogador);
+
+            System.out.println(jogador.getNome() + " faliu e saiu do jogo.");
             return true;
         }
         return false;
