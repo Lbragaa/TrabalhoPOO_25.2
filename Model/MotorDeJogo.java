@@ -29,27 +29,40 @@ public class MotorDeJogo {
                 && dados.get(0) != null && dados.get(1) != null
                 && dados.get(0).intValue() == dados.get(1).intValue();
     }
-    // 2️⃣ Mover jogador
-    public void moverJogador(Jogador jogador, List<Integer> dados) {
-        if (jogador == null || dados == null || dados.isEmpty()) return;
+// 2️⃣ Mover jogador (agora bloqueia se estiver preso)
+public void moverJogador(Jogador jogador, List<Integer> dados) {
+    if (jogador == null || dados == null || dados.isEmpty()) return;
 
-        int somaDados = 0;
-        for (Integer d : dados) {
-            if (d != null) somaDados += d;
-        }
-
-        // Move (sua lógica de wrap/“passou pelo início” permanece no Jogador)
-        jogador.move(somaDados, banco); // passa o banco atual para possivelmente pagar o jogador
-
-        // Resolve cobrança de aluguel automaticamente (Regra 5)
-        // Aqui vai ocorrer a checagem se o jogador caiu em alguma propriedade
-        Propriedade prop = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
-        if (prop != null) {
-            pagarAluguel(jogador, prop);
-        }
-
-        // DEPOIS incluir mais efeitos automaticos aqui 
+    // Se o jogador está preso, ele não se move
+    if (jogador.estaPreso()) {
+        System.out.println(jogador.getNome() + " está preso e não pode se mover.");
+        return;
     }
+
+    int somaDados = 0;
+    for (Integer d : dados) {
+        if (d != null) somaDados += d;
+    }
+
+    // Move o jogador (regra de passar pela saída implementada em Jogador.move)
+    jogador.move(somaDados, banco);
+
+    // Verifica se caiu em casa de prisão (deve ocorrer antes de cobrar aluguel)
+    verificarPrisao(jogador);
+    if (jogador.estaPreso()) {
+        System.out.println(jogador.getNome() + " foi preso!");
+        return; // Não executa ações adicionais
+    }
+
+    // Resolve cobrança de aluguel automaticamente
+    Propriedade prop = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
+    if (prop != null) {
+        pagarAluguel(jogador, prop);
+    }
+
+    // Espaço para futuras ações automáticas (cartas, taxas etc.)
+}
+
     
 
     // 3️⃣ Comprar propriedade (sem dono)
