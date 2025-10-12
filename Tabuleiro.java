@@ -51,13 +51,12 @@ class Tabuleiro {
         baralhoSorteReves.offer(new Carta("PAGAR", 100));
         baralhoSorteReves.offer(new Carta("RECEBER", 200));
     }
-    private void inicializarPropriedades() {e a 0 (início/saída).
+    private void inicializarPropriedades(){
         // - Ajuste posições, nomes e valores para o seu tabuleiro definitivo.
         // Exemplo de mapeamento simples de posições (ajuste conforme seu layout):
         // Obs.: use valores coerentes com sua economia de jogo
         // Terrenos: nome, preco, valorCasa, aluguelBase
         Propriedade p;
-
         p = new Terreno("Terreno — Vila Azul",        120,  50,  20);  p.setPosicao(1);  propriedades.add(p);
         p = new PropriedadeComum("Praça Municipal",    100,       18);  p.setPosicao(3);  propriedades.add(p);
         p = new Terreno("Terreno — Jardim Verde",     140,  50,  22);  p.setPosicao(6);  propriedades.add(p);
@@ -180,6 +179,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
 }
 }
+
 
 
 
