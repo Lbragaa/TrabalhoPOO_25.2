@@ -1,6 +1,5 @@
 package model;
 
-// (package-private) visível só dentro de model
 enum TipoCarta {
     VAI_PARA_PRISAO,
     SAIDA_LIVRE,
@@ -17,7 +16,7 @@ final class Carta {
         this.tipo = tipo;
         this.valor = valor;
     }
-
+    //se a carta for de liberar ou colocar na prisao, o valor é 0
     public String toString() {
         return "Carta{tipo=" + tipo + ", valor=" + valor + "}";
     }
