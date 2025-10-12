@@ -10,6 +10,7 @@ class Tabuleiro {
     // Número padrão de casas no Banco Imobiliário
     private static final int NUM_CASAS = 40;
     // Posição da prisão (geralmente casa 10)
+    private static final int POSICAO_VAI_PRA_PRISAO = 26
     private static final int POSICAO_PRISAO = 10;
 
     // Lista de propriedades existentes no tabuleiro
@@ -33,11 +34,11 @@ class Tabuleiro {
     }
 
     public static int getPosicaoPrisao() {
-        return POSICAO_PRISAO;
+        return POSICAO_VAI_PRA_PRISA;
     }
 
     public boolean isCasaPrisao(int posicao) {
-        return posicao == POSICAO_PRISAO;
+        return posicao == POSICAO_VAI_PRA_PRISAO;
     }
     //---------------------MÉTODOS AUXILIARES PRA TESTE--------------------------
     public void inicializarBaralhoTeste() {
@@ -179,6 +180,7 @@ class Tabuleiro {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
 }
 }
+
 
 
 
