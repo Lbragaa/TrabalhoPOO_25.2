@@ -88,14 +88,23 @@ public class Acoes {
     }
 
     // 6️⃣ Verificar prisão (entrada/saída)
-    public void verificarPrisao(Jogador jogador, List<Integer> dados) {
-        boolean dadoIguais = ehDupla(dados);
-        if (jogador.estaPreso() && dadosIguais) {
-            jogador.solta();
-        } else if (tabuleiro.isCasaPrisao(jogador.getPosicao())) {
+    public void verificarPrisao(Jogador jogador) {
+        if (jogador == null) return;
+        else if (tabuleiro.isCasaPrisao(jogador.getPosicao())) {
             jogador.prende();
         }
     }
+    // Liberar se ele tirar dupla
+    // 2) Soltar se tirou dupla (não move aqui; só libera)
+    public boolean soltarSeDupla(Jogador jogador,List<Integer> dados) {
+        if (jogador == null || !jogador.estaPreso()) return false;
+        if (ehDupla(dados)) {
+            jogador.solta();
+            return true;
+        }
+        return false;
+    }
+    
     // pegandoo as cartas aq
     public void puxarSorteReves(Jogador j) {
         Carta c = tabuleiro.comprarCartaSorteReves();
@@ -115,6 +124,7 @@ public class Acoes {
         return true;
     }
 
+    public 
 
     // 7️⃣ Verificar falência e remover jogador do jogo
     public boolean verificarFalencia(Jogador jogador) {
@@ -134,6 +144,7 @@ public class Acoes {
         return false;
     }
 }
+
 
 
 
