@@ -15,7 +15,10 @@ public class MotorDeJogo {
     }
 
 
-// O método agora promete retornar qualquer tipo de Lista
+    /**
+     * Lança dois dados de 6 faces e retorna os valores.
+     * @return Lista com dois inteiros representando os dados.
+     */
     public List<Integer> lancarDados() {
         Random r = new Random();
         List<Integer> dados = new ArrayList<>();
@@ -23,13 +26,22 @@ public class MotorDeJogo {
         dados.add(r.nextInt(6) + 1);
         return dados;
     }
-    /** Checa se saiu dupla para liberar da cadeia. */
+    /**
+     * Verifica se os dados representam uma dupla (mesmo valor em ambos os dados).
+     * @param dados Lista com dois inteiros representando os dados.
+     * @return true se for dupla, false caso contrário.
+     */
     private static boolean ehDupla(List<Integer> dados) {
         return dados != null && dados.size() >= 2
                 && dados.get(0) != null && dados.get(1) != null
                 && dados.get(0).intValue() == dados.get(1).intValue();
     }
-// Mover jogador (agora bloqueia se estiver preso)
+    /**
+     * Move o jogador no tabuleiro de acordo com a soma dos dados.
+     * Bloqueia movimento se o jogador estiver preso.
+     * @param jogador Jogador a ser movido.
+     * @param dados Lista com os valores dos dados.
+     */
     public void moverJogador(Jogador jogador, List<Integer> dados) {
         if (jogador == null || dados == null || dados.isEmpty()) return;
     
@@ -65,7 +77,11 @@ public class MotorDeJogo {
 
     
 
-    // Comprar propriedade (sem dono)
+    /**
+     * Permite que um jogador compre uma propriedade sem dono.
+     * @param jogador Jogador que deseja comprar.
+     * @param propriedade Propriedade a ser comprada.
+     */
     public void comprarPropriedade(Jogador jogador, Propriedade propriedade) {
         if (propriedade.estaDisponivel()) {
             boolean pagou = jogador.getConta().paga(banco.getConta(), propriedade.getPreco());
@@ -77,7 +93,12 @@ public class MotorDeJogo {
         }
     }
 
-    // Construir casa (apenas terrenos)
+    /**
+     * Permite que um jogador construa casa em um terreno.
+     * Só constrói se o jogador estiver na posição correta e for dono.
+     * @param jogador Jogador que deseja construir.
+     * @param propriedade Propriedade onde será construída a casa.
+     */
     public void construirCasa(Jogador jogador, Propriedade propriedade) { 
     	Propriedade atual = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
     	if (propriedade != atual) return; // só constrói se estiver na propriedade
@@ -93,7 +114,12 @@ public class MotorDeJogo {
         }
     }
 
-// Pagar aluguel automaticamente (com falência integrada)
+     /**
+     * Cobra aluguel automaticamente de um jogador que caiu em uma propriedade.
+     * Se não puder pagar, o jogador faliu.
+     * @param jogador Jogador que deve pagar.
+     * @param propriedade Propriedade onde o jogador caiu.
+     */
     public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
         if (jogador == null || propriedade == null) return;
 
@@ -126,15 +152,22 @@ public class MotorDeJogo {
 
 
 
-    // Verificar prisão (entrada/saída)
+    /**
+     * Verifica se o jogador caiu em uma casa de prisão e prende-o.
+     * @param jogador Jogador a ser verificado.
+     */
     public void verificarPrisao(Jogador jogador) {
         if (jogador == null) return;
         else if (tabuleiro.isCasaPrisao(jogador.getPosicao())) {
             jogador.prende();
         }
     }
-    // Liberar se ele tirar dupla
-    // 2) Soltar se tirou dupla (não move aqui; só libera)
+    /**
+     * Libera o jogador da prisão se tirou uma dupla nos dados.
+     * @param jogador Jogador preso.
+     * @param dados Dados lançados.
+     * @return true se o jogador foi liberado, false caso contrário.
+     */
     public boolean soltarSeDupla(Jogador jogador,List<Integer> dados) {
         if (jogador == null || !jogador.estaPreso()) return false;
         if (ehDupla(dados)) {
@@ -144,7 +177,10 @@ public class MotorDeJogo {
         return false;
     }
     
-    // pegandoo as cartas aq
+    /**
+     * Puxa uma carta de sorte/revés do tabuleiro e aplica seu efeito no jogador.
+     * @param j Jogador que puxou a carta.
+     */
     public void puxarSorteReves(Jogador j) {
         Carta c = tabuleiro.comprarCartaSorteReves();
         switch (c.tipo) {
@@ -155,6 +191,11 @@ public class MotorDeJogo {
         }
     }
 
+    /**
+     * Usa uma carta de liberação da prisão, se disponível, e libera o jogador.
+     * @param j Jogador preso.
+     * @return true se a carta foi usada com sucesso, false caso contrário.
+     */
     public boolean usarCartaLiberacao(Jogador j) {
         if (j == null || !j.estaPreso()) return false;
         if (!j.consumirCartaLiberacao()) return false;
@@ -163,7 +204,11 @@ public class MotorDeJogo {
         return true;
     }
 
-    // Verificar falência e remover jogador do jogo
+    /**
+     * Verifica se o jogador faliu (saldo negativo ou flag de falência) e remove do jogo.
+     * @param jogador Jogador a ser verificado.
+     * @return true se o jogador faliu, false caso contrário.
+     */
     public boolean verificarFalencia(Jogador jogador) {
         
         if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
