@@ -5,6 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+/**
+ * Representa o tabuleiro do jogo Banco Imobiliário.
+ * Mantém o controle das propriedades, jogadores ativos e do baralho de cartas Sorte/Revés.
+ */
 class Tabuleiro {
 
     // Número padrão de casas no Banco Imobiliário
@@ -30,22 +34,44 @@ class Tabuleiro {
     }
 
     // ---------- MÉTODOS ESTÁTICOS ----------
+    /**
+     * Retorna o número total de casas no tabuleiro.
+     * @return Número de casas.
+     */
     public static int getNumCasas() {
         return NUM_CASAS;
     }
 
+    /**
+     * Retorna a posição da casa que envia o jogador para a prisão.
+     * @return Posição "Vá para a Prisão".
+     */
     public static int getPosicaoPrisao() { //posicao quando o jogador tem que ir para prisao
         return POSICAO_VAI_PRA_PRISAO;
     }
-    
+
+    /**
+     * Retorna a posição da prisão onde o jogador ficará preso.
+     * @return Posição da prisão.
+     */
     public static int getPosicaoVisitaPrisao() {
     	return POSICAO_PRISAO;      //posicao de destino do jogador quando ele é preso
     }
+
+    /**
+     * Verifica se a posição fornecida corresponde à casa "Vá para a Prisão".
+     * @param posicao Posição a ser verificada.
+     * @return true se for a casa de prisão, false caso contrário.
+     */
     public boolean isCasaPrisao(int posicao) { // verifica se é a casa que ele é mandado pra prisao
         return posicao == POSICAO_VAI_PRA_PRISAO;
     }
     
     //---------------------MÉTODOS AUXILIARES PRA TESTE--------------------------
+
+    /**
+     * Inicializa o baralho de Sorte/Revés com cartas de teste simples.
+     */
     public void inicializarBaralhoTeste() {
         if (baralhoSorteReves == null) return;
 
@@ -59,14 +85,26 @@ class Tabuleiro {
     }
 
     // ---------- PROPRIEDADES ----------
+    /**
+     * Adiciona uma propriedade ao tabuleiro.
+     * @param p Propriedade a ser adicionada.
+     */
     public void addPropriedade(Propriedade p) {
         propriedades.add(p);
     }
 
+    /**
+     * Retorna a lista de propriedades do tabuleiro.
+     * @return Lista de propriedades.
+     */
     public List<Propriedade> getPropriedades() {
         return propriedades;
     }
 
+    /**
+     * Libera todas as propriedades pertencentes a um jogador (usado em caso de falência).
+     * @param jogador Jogador cujas propriedades serão liberadas.
+     */
     public void limparPropriedadesDe(Jogador jogador) {
         for (Propriedade p : propriedades) {
             if (p.getProprietario() == jogador) {
@@ -76,18 +114,35 @@ class Tabuleiro {
     }
 
     // ---------- JOGADORES ----------
+    /**
+     * Adiciona um jogador ativo ao tabuleiro.
+     * @param jogador Jogador a ser adicionado.
+     */
     public void addJogador(Jogador jogador) {
         jogadoresAtivos.add(jogador);
     }
 
+    /**
+     * Remove um jogador do tabuleiro.
+     * @param jogador Jogador a ser removido.
+     */
     public void removerJogador(Jogador jogador) {
         jogadoresAtivos.remove(jogador);
     }
 
+    /**
+     * Retorna a lista de jogadores ativos no tabuleiro.
+     * @return Lista de jogadores.
+     */
     public List<Jogador> getJogadoresAtivos() {
         return jogadoresAtivos;
     }
-    
+
+    /**
+     * Retorna a propriedade que ocupa uma determinada posição no tabuleiro.
+     * @param posicao Posição a ser consultada.
+     * @return Propriedade na posição, ou null se não houver.
+     */
     public Propriedade getPropriedadeNaPosicao(int posicao) {
         for (Propriedade p : propriedades) {
             if (p.getPosicao() == posicao) {
@@ -97,10 +152,22 @@ class Tabuleiro {
         return null;
     }
 
+    /**
+     * Verifica se um jogador está ativo no jogo.
+     * @param jogador Jogador a ser verificado.
+     * @return true se o jogador estiver no jogo, false caso contrário.
+     */
     public boolean estaNoJogo(Jogador jogador) {
         return jogadoresAtivos.contains(jogador);
     }
     //--------------- CARTAS -------------
+
+    /**
+     * Compra uma carta do baralho de Sorte/Revés.
+     * As cartas de liberação ("SAIDA_LIVRE") não retornam ao baralho imediatamente.
+     * @return Carta comprada.
+     * @throws IllegalStateException se o baralho estiver vazio.
+     */
     public Carta comprarCartaSorteReves() {
         Carta c = baralhoSorteReves.poll();
         if (c == null) throw new IllegalStateException("Baralho de Sorte/Revés vazio.");
@@ -114,7 +181,11 @@ class Tabuleiro {
         }
         return c;
     }
-    //Quando o jogador usa a carta ele tem que devolver pro final da fila, isso acontece la na ação quando ele ta preso e usa a carta pra sair
+
+    /**
+     * Devolve uma carta de liberação da prisão ao final do baralho.
+     * Usado quando o jogador utiliza a carta para sair da prisão.
+     */
     public void devolverCartaLiberacao() {
     baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE, 0));
     }
