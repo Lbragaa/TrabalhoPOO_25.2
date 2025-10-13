@@ -102,27 +102,27 @@ public class TestMotorDeJogo {
     }
 
     // 3c) Tentativa de compra de propriedade que já possui dono: deve ser ignorada
-    @Test
-    public void testCompraPropriedadeJaTemDono() {
-        Propriedade p = new Propriedade("Shopping", 400, 25, 8);
-        tabuleiro.addPropriedade(p);
+@Test
+public void testCompraPropriedadeJaTemDono() {
+    Propriedade p = new Propriedade("Shopping", 400, 25, 8);
+    tabuleiro.addPropriedade(p);
 
-        // j2 compra primeiro
-        motor.comprarPropriedade(j2, p);
-        assertEquals(j2, p.getProprietario());
+    // j2 compra primeiro
+    motor.comprarPropriedade(j2, p);
+    assertEquals(j2, p.getProprietario());
 
-        // j1 tenta comprar novamente
-        int saldoJ1Antes = j1.getConta().getSaldo();
-        int saldoJ2Antes = j2.getConta().getSaldo();
-        int saldoBancoAntes = banco.getSaldo();
+    // j1 tenta comprar novamente
+    int saldoJ1Antes = j1.getConta().getSaldo();
+    int saldoJ2Antes = j2.getConta().getSaldo();
+    int saldoBancoAntes = banco.getSaldo();
 
-        motor.comprarPropriedade(j1, p); // não deve alterar nada
+    motor.comprarPropriedade(j1, p); // não deve alterar nada
 
-        assertEquals(j2, p.getProprietario()); // dono permanece
-        assertEquals(saldoJ1Antes, j1.getConta().getSaldo());
-        assertEquals(saldoJ2Antes, j2.getConta().getSaldo());
-        assertEquals(saldoBancoAntes, banco.getSaldo());
-    }
+    assertEquals(j2, p.getProprietario()); // dono permanece
+    assertEquals(saldoJ1Antes, j1.getConta().getSaldo());
+    assertEquals(saldoJ2Antes, j2.getConta().getSaldo());
+    assertEquals(saldoBancoAntes, banco.getSaldo());
+}
 
 
     // 4) Construção: no terreno onde está, sendo dono, paga valorCasa
