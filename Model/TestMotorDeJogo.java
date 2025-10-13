@@ -7,6 +7,18 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Classe de testes unitários para o componente Model (MotorDeJogo).
+ * 
+ * Testa todas as principais regras exigidas na 1ª iteração:
+ * 1. Lançamento dos dados
+ * 2. Movimentação dos jogadores
+ * 3. Compra de propriedades
+ * 4. Construção de casas
+ * 5. Pagamento automático de aluguel
+ * 6. Regras de prisão e cartas Sorte/Reves
+ * 7. Falência
+ */
 public class TestMotorDeJogo {
 
     private Banco banco;
@@ -28,7 +40,9 @@ public class TestMotorDeJogo {
         tabuleiro.addJogador(j2);
     }
 
-    // 1) Lançar dados: 2 valores ∈ [1..6]
+    /** 
+     * Testa o lançamento de dados: devem ser 2 valores no intervalo [1..6].
+     */
     @Test
     public void testLancarDados() {
         List<Integer> d = motor.lancarDados();
@@ -37,12 +51,13 @@ public class TestMotorDeJogo {
         assertTrue(d.get(1) >= 1 && d.get(1) <= 6);
     }
 
-    // 2a) Movimento simples: jogador avança corretamente sem passar pela saída
+    /** 
+     * Testa movimento simples: jogador avança a soma dos dados, sem passar pela saída.
+     */
     @Test
     public void testMovimentoSimples() {
         j1.setPosicao(5);
 
-        // Dados = 3 + 2 = 5 → nova posição = 10
         List<Integer> dados = new ArrayList<>();
         dados.add(3);
         dados.add(2);
@@ -50,13 +65,15 @@ public class TestMotorDeJogo {
 
         assertEquals(10, j1.getPosicao());
     }
-    // 2b) Movimento com wrap: jogador passa pela saída e recebe bônus
+
+    /** 
+     * Testa movimento com wrap: jogador passa pela saída e recebe bônus de 200.
+     */
     @Test
     public void testMovimentoComWrapEPassarSaida() {
-        j1.setPosicao(Tabuleiro.getNumCasas() - 1); // 39
+        j1.setPosicao(Tabuleiro.getNumCasas() - 1);
         int saldoAntes = j1.getConta().getSaldo();
 
-        // Soma = 2 → 39 + 2 = 41 → posição final = 1 (passou pela saída)
         List<Integer> dados = new ArrayList<>();
         dados.add(1);
         dados.add(1);
@@ -65,14 +82,20 @@ public class TestMotorDeJogo {
         assertEquals(1, j1.getPosicao());
         assertEquals(saldoAntes + 200, j1.getConta().getSaldo());
     }
-    // 2c) Movimento com dados nulos: função deve apenas retornar sem erro
+
+    /** 
+     * Testa proteção contra dados nulos: deve ignorar o movimento sem lançar erro.
+     */
     @Test
     public void testMovimentoComDadosNulos() {
         j1.setPosicao(5);
-        motor.moverJogador(j1, null); // deve ser ignorado silenciosamente
+        motor.moverJogador(j1, null);
         assertEquals(5, j1.getPosicao());
     }
-    // 3) Compra de propriedade disponível (voluntário): paga e vira dono
+
+    /** 
+     * Testa compra de propriedade disponível: jogador paga e vira dono.
+     */
     @Test
     public void testCompraPropriedadeDisponivel() {
         Propriedade p = new Propriedade("Mercado", 300, 20, 7);
@@ -86,7 +109,9 @@ public class TestMotorDeJogo {
         assertEquals(200000 + 300, banco.getSaldo());
     }
 
-    // 3b) Compra com saldo insuficiente (voluntário): não compra, sem falência
+    /** 
+     * Testa tentativa de compra sem saldo suficiente: deve falhar sem causar falência.
+     */
     @Test
     public void testCompraInsuficienteNaoFali() {
         Propriedade p = new Propriedade("Aeroporto", 999_999, 50, 9);
@@ -101,31 +126,32 @@ public class TestMotorDeJogo {
         assertFalse(j1.isFalido());
     }
 
-    // 3c) Tentativa de compra de propriedade que já possui dono: deve ser ignorada
-@Test
-public void testCompraPropriedadeJaTemDono() {
-    Propriedade p = new Propriedade("Shopping", 400, 25, 8);
-    tabuleiro.addPropriedade(p);
+    /** 
+     * Testa tentativa de compra de propriedade já com dono: operação deve ser ignorada.
+     */
+    @Test
+    public void testCompraPropriedadeJaTemDono() {
+        Propriedade p = new Propriedade("Shopping", 400, 25, 8);
+        tabuleiro.addPropriedade(p);
 
-    // j2 compra primeiro
-    motor.comprarPropriedade(j2, p);
-    assertEquals(j2, p.getProprietario());
+        motor.comprarPropriedade(j2, p);
+        assertEquals(j2, p.getProprietario());
 
-    // j1 tenta comprar novamente
-    int saldoJ1Antes = j1.getConta().getSaldo();
-    int saldoJ2Antes = j2.getConta().getSaldo();
-    int saldoBancoAntes = banco.getSaldo();
+        int saldoJ1Antes = j1.getConta().getSaldo();
+        int saldoJ2Antes = j2.getConta().getSaldo();
+        int saldoBancoAntes = banco.getSaldo();
 
-    motor.comprarPropriedade(j1, p); // não deve alterar nada
+        motor.comprarPropriedade(j1, p);
 
-    assertEquals(j2, p.getProprietario()); // dono permanece
-    assertEquals(saldoJ1Antes, j1.getConta().getSaldo());
-    assertEquals(saldoJ2Antes, j2.getConta().getSaldo());
-    assertEquals(saldoBancoAntes, banco.getSaldo());
-}
+        assertEquals(j2, p.getProprietario());
+        assertEquals(saldoJ1Antes, j1.getConta().getSaldo());
+        assertEquals(saldoJ2Antes, j2.getConta().getSaldo());
+        assertEquals(saldoBancoAntes, banco.getSaldo());
+    }
 
-
-    // 4) Construção: no terreno onde está, sendo dono, paga valorCasa
+    /** 
+     * Testa construção de casa: jogador é dono e está na posição do terreno.
+     */
     @Test
     public void testConstruirCasaBasico() {
         Terreno t = new Terreno("Vila Azul", 120, 50, 20, 4);
@@ -141,7 +167,9 @@ public void testCompraPropriedadeJaTemDono() {
         assertEquals(saldoAntes - t.getValorCasa(), j1.getConta().getSaldo());
     }
 
-    // 4b) Construção falha se não estiver na mesma casa
+    /** 
+     * Testa tentativa de construção fora da casa atual: não deve adicionar casas.
+     */
     @Test
     public void testConstruirCasaForaDaCasaNaoConstrui() {
         Terreno t = new Terreno("Jardim Verde", 140, 50, 22, 6);
@@ -153,25 +181,28 @@ public void testCompraPropriedadeJaTemDono() {
         motor.construirCasa(j1, t);
         assertEquals(0, t.getNumCasas());
     }
-    
-    // 4c) Tentar construir em um terreno que NÃO pertence ao jogador: não deve adicionar casa
+
+    /** 
+     * Testa tentativa de construção em terreno que pertence a outro jogador: ignorado.
+     */
     @Test
     public void testConstruirCasaEmTerrenoDeOutroJogador() {
         Terreno t = new Terreno("Campo Dourado", 200, 100, 40, 10);
         tabuleiro.addPropriedade(t);
 
-        // j2 compra o terreno, j1 tenta construir
         motor.comprarPropriedade(j2, t);
         j1.setPosicao(10);
         int casasAntes = t.getNumCasas();
 
         motor.construirCasa(j1, t);
 
-        assertEquals(casasAntes, t.getNumCasas()); // nada muda
+        assertEquals(casasAntes, t.getNumCasas());
         assertEquals(j2, t.getProprietario());
     }
 
-    // 5) Aluguel automático: terreno só cobra se >=1 casa
+    /** 
+     * Testa cobrança de aluguel em terreno com casa: jogador paga ao dono.
+     */
     @Test
     public void testAluguelTerrenoComCasa() {
         Terreno t = new Terreno("Centro", 180, 100, 30, 11);
@@ -179,21 +210,23 @@ public void testCompraPropriedadeJaTemDono() {
 
         motor.comprarPropriedade(j2, t);
         j2.setPosicao(11);
-        motor.construirCasa(j2, t); // 1 casa
+        motor.construirCasa(j2, t);
 
         int saldoJ1 = j1.getConta().getSaldo();
         int saldoJ2 = j2.getConta().getSaldo();
 
         j1.setPosicao(9);
         List<Integer> dados = new ArrayList<>();
-        dados.add(1); dados.add(1); // 9 -> 11
+        dados.add(1); dados.add(1);
         motor.moverJogador(j1, dados);
 
         assertEquals(saldoJ1 - 30, j1.getConta().getSaldo());
         assertEquals(saldoJ2 + 30, j2.getConta().getSaldo());
     }
 
-    // 5b) Empresa/Propriedade genérica cobra aluguelBase (via calculaAluguel)
+    /** 
+     * Testa cobrança de aluguel em propriedade genérica (empresa).
+     */
     @Test
     public void testAluguelPropriedadeGenerica() {
         Propriedade p = new Propriedade("Estação", 200, 25, 8);
@@ -206,41 +239,41 @@ public void testCompraPropriedadeJaTemDono() {
         int s2 = j2.getConta().getSaldo();
 
         List<Integer> dados = new ArrayList<>();
-        dados.add(1); dados.add(1); // 6 -> 8
+        dados.add(1); dados.add(1);
         motor.moverJogador(j1, dados);
 
         assertEquals(s1 - 25, j1.getConta().getSaldo());
         assertEquals(s2 + 25, j2.getConta().getSaldo());
     }
-    
-    // 5c) Tentar cobrar aluguel de um terreno com 0 casas: não deve cobrar
+
+    /** 
+     * Testa tentativa de cobrança de aluguel de terreno sem casas: não deve cobrar.
+     */
     @Test
     public void testNaoCobraAluguelSemCasas() {
         Terreno t = new Terreno("Bairro Vazio", 150, 100, 25, 12);
         tabuleiro.addPropriedade(t);
 
-        // j2 é dono, mas ainda sem casas
         motor.comprarPropriedade(j2, t);
         j1.setPosicao(10);
 
         int saldoJ1Antes = j1.getConta().getSaldo();
         int saldoJ2Antes = j2.getConta().getSaldo();
 
-        // j1 cai na posição 12
         List<Integer> dados = new ArrayList<>();
-        dados.add(1); dados.add(1); // 10 -> 12
+        dados.add(1); dados.add(1);
         motor.moverJogador(j1, dados);
 
-        // Nenhum valor deve mudar
         assertEquals(saldoJ1Antes, j1.getConta().getSaldo());
         assertEquals(saldoJ2Antes, j2.getConta().getSaldo());
     }
 
-
-    // 6) Prisão: cair em "vai pra prisão" prende
+    /** 
+     * Testa cair na casa "Vai para Prisão": jogador deve ser preso automaticamente.
+     */
     @Test
     public void testCairNaCasaVaiPraPrisao() {
-        int posVaiPrisao = Tabuleiro.getPosicaoPrisao(); // 26
+        int posVaiPrisao = Tabuleiro.getPosicaoPrisao();
         j1.setPosicao(posVaiPrisao - 2);
 
         List<Integer> dados = new ArrayList<>();
@@ -251,32 +284,31 @@ public void testCompraPropriedadeJaTemDono() {
         assertEquals(Tabuleiro.getPosicaoVisitaPrisao(), j1.getPosicao());
     }
 
-    // 6b.1) Carta "VAI_PARA_PRISAO" prende o jogador corretamente
+    /** 
+     * Testa carta Sorte/Reves "Vai para Prisão": prende o jogador.
+     */
     @Test
     public void testCartaVaiParaPrisao() {
-        tabuleiro.inicializarBaralhoTeste(); // garante ordem conhecida das cartas
+        tabuleiro.inicializarBaralhoTeste();
 
-        // 1ª carta do baralho de teste é "VAI_PARA_PRISAO"
         motor.puxarSorteReves(j1);
 
         assertTrue(j1.estaPreso());
         assertEquals(Tabuleiro.getPosicaoVisitaPrisao(), j1.getPosicao());
     }
 
-    // 6b.2) Carta "SAIDA_LIVRE" é guardada e pode ser usada para sair da prisão
+    /** 
+     * Testa carta Sorte/Reves "Saída Livre": jogador guarda e consegue usá-la.
+     */
     @Test
     public void testCartaSaidaLivre() {
         tabuleiro.inicializarBaralhoTeste();
 
-        // Avança uma carta no baralho para chegar na SAIDA_LIVRE
-        motor.puxarSorteReves(j1); // consome "VAI_PARA_PRISAO"
-
-        // Agora a próxima é "SAIDA_LIVRE"
-        motor.puxarSorteReves(j1);
+        motor.puxarSorteReves(j1); // consome "Vai para Prisão"
+        motor.puxarSorteReves(j1); // agora "Saída Livre"
 
         assertEquals(1, j1.getCartasLiberacao());
 
-        // Força o jogador a estar preso e testa o uso da carta
         j1.prende();
         boolean usou = motor.usarCartaLiberacao(j1);
 
@@ -285,13 +317,14 @@ public void testCompraPropriedadeJaTemDono() {
         assertEquals(0, j1.getCartasLiberacao());
     }
 
-    // 6c) Jogador preso é solto ao tirar uma dupla nos dados
+    /** 
+     * Testa soltura por dupla: jogador preso é liberado ao tirar dois dados iguais.
+     */
     @Test
     public void testSoltarSeDupla() {
         j1.prende();
         assertTrue(j1.estaPreso());
 
-        // Simula dados com valores iguais (dupla)
         List<Integer> dadosDupla = new ArrayList<>();
         dadosDupla.add(4);
         dadosDupla.add(4);
@@ -302,13 +335,14 @@ public void testCompraPropriedadeJaTemDono() {
         assertFalse(j1.estaPreso());
     }
 
-    // 6c.2) Jogador preso continua preso se NÃO tirar dupla
+    /** 
+     * Testa que o jogador continua preso se não tirar uma dupla.
+     */
     @Test
     public void testNaoSoltaSemDupla() {
         j1.prende();
         assertTrue(j1.estaPreso());
 
-        // Dados diferentes, não é dupla
         List<Integer> dadosNormais = new ArrayList<>();
         dadosNormais.add(3);
         dadosNormais.add(5);
@@ -319,8 +353,9 @@ public void testCompraPropriedadeJaTemDono() {
         assertTrue(j1.estaPreso());
     }
 
-
-    // 7) Falência: aluguel obrigatório com saldo insuficiente => falido e removido
+    /** 
+     * Testa falência automática ao cair em terreno de outro jogador sem saldo.
+     */
     @Test
     public void testFalenciaPorAluguel() {
         Terreno t = new Terreno("Zona Sul", 300, 200, 50, 27);
@@ -328,13 +363,13 @@ public void testCompraPropriedadeJaTemDono() {
 
         motor.comprarPropriedade(j2, t);
         j2.setPosicao(27);
-        motor.construirCasa(j2, t); // 1 casa -> aluguel 50
+        motor.construirCasa(j2, t);
 
         j1.getConta().setSaldo(0);
         j1.setPosicao(25);
 
         List<Integer> dados = new ArrayList<>();
-        dados.add(1); dados.add(1); // 25 -> 27
+        dados.add(1); dados.add(1);
         motor.moverJogador(j1, dados);
 
         assertTrue(j1.isFalido());
