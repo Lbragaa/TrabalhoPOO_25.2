@@ -251,25 +251,74 @@ public void testCompraPropriedadeJaTemDono() {
         assertEquals(Tabuleiro.getPosicaoVisitaPrisao(), j1.getPosicao());
     }
 
-    // 6b) Cartas: baralho de teste aplica VAI_PARA_PRISAO e SAIDA_LIVRE
+    // 6b.1) Carta "VAI_PARA_PRISAO" prende o jogador corretamente
     @Test
-    public void testBaralhoSorteRevesBasico() {
+    public void testCartaVaiParaPrisao() {
+        tabuleiro.inicializarBaralhoTeste(); // garante ordem conhecida das cartas
+
+        // 1ª carta do baralho de teste é "VAI_PARA_PRISAO"
+        motor.puxarSorteReves(j1);
+
+        assertTrue(j1.estaPreso());
+        assertEquals(Tabuleiro.getPosicaoVisitaPrisao(), j1.getPosicao());
+    }
+
+    // 6b.2) Carta "SAIDA_LIVRE" é guardada e pode ser usada para sair da prisão
+    @Test
+    public void testCartaSaidaLivre() {
         tabuleiro.inicializarBaralhoTeste();
 
-        // 1ª carta: VAI_PARA_PRISAO
-        motor.puxarSorteReves(j1);
-        assertTrue(j1.estaPreso());
+        // Avança uma carta no baralho para chegar na SAIDA_LIVRE
+        motor.puxarSorteReves(j1); // consome "VAI_PARA_PRISAO"
 
-        // 2ª carta: SAIDA_LIVRE (guarda carta)
+        // Agora a próxima é "SAIDA_LIVRE"
         motor.puxarSorteReves(j1);
+
         assertEquals(1, j1.getCartasLiberacao());
 
-        // Usa a carta para sair
+        // Força o jogador a estar preso e testa o uso da carta
+        j1.prende();
         boolean usou = motor.usarCartaLiberacao(j1);
+
         assertTrue(usou);
         assertFalse(j1.estaPreso());
         assertEquals(0, j1.getCartasLiberacao());
     }
+
+        // 6c) Jogador preso é solto ao tirar uma dupla nos dados
+    @Test
+    public void testSoltarSeDupla() {
+        j1.prende();
+        assertTrue(j1.estaPreso());
+
+        // Simula dados com valores iguais (dupla)
+        List<Integer> dadosDupla = new ArrayList<>();
+        dadosDupla.add(4);
+        dadosDupla.add(4);
+
+        boolean liberado = motor.soltarSeDupla(j1, dadosDupla);
+
+        assertTrue(liberado);
+        assertFalse(j1.estaPreso());
+    }
+
+    // 6c.2) Jogador preso continua preso se NÃO tirar dupla
+    @Test
+    public void testNaoSoltaSemDupla() {
+        j1.prende();
+        assertTrue(j1.estaPreso());
+
+        // Dados diferentes, não é dupla
+        List<Integer> dadosNormais = new ArrayList<>();
+        dadosNormais.add(3);
+        dadosNormais.add(5);
+
+        boolean liberado = motor.soltarSeDupla(j1, dadosNormais);
+
+        assertFalse(liberado);
+        assertTrue(j1.estaPreso());
+    }
+
 
     // 7) Falência: aluguel obrigatório com saldo insuficiente => falido e removido
     @Test
