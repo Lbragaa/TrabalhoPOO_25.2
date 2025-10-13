@@ -285,7 +285,7 @@ public void testCompraPropriedadeJaTemDono() {
         assertEquals(0, j1.getCartasLiberacao());
     }
 
-        // 6c) Jogador preso é solto ao tirar uma dupla nos dados
+    // 6c) Jogador preso é solto ao tirar uma dupla nos dados
     @Test
     public void testSoltarSeDupla() {
         j1.prende();
