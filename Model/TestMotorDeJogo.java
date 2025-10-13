@@ -44,7 +44,7 @@ public class TestMotorDeJogo {
         int saldoAntes = j1.getConta().getSaldo();
 
         List<Integer> dados = new ArrayList<>();
-        dados.add(2); dados.add(0); // soma 2
+        dados.add(1); dados.add(1); // soma 2
         motor.moverJogador(j1, dados);
 
         assertEquals(1, j1.getPosicao());
