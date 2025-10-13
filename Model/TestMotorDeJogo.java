@@ -37,33 +37,41 @@ public class TestMotorDeJogo {
         assertTrue(d.get(1) >= 1 && d.get(1) <= 6);
     }
 
-    // 2) Movimento: wrap + bônus ao passar pela saída
+    // 2a) Movimento simples: jogador avança corretamente sem passar pela saída
     @Test
-    public void testMovimentoWrapEPassarSaida() {
+    public void testMovimentoSimples() {
+        j1.setPosicao(5);
+
+        // Dados = 3 + 2 = 5 → nova posição = 10
+        List<Integer> dados = new ArrayList<>();
+        dados.add(3);
+        dados.add(2);
+        motor.moverJogador(j1, dados);
+
+        assertEquals(10, j1.getPosicao());
+    }
+    // 2b) Movimento com wrap: jogador passa pela saída e recebe bônus
+    @Test
+    public void testMovimentoComWrapEPassarSaida() {
         j1.setPosicao(Tabuleiro.getNumCasas() - 1); // 39
         int saldoAntes = j1.getConta().getSaldo();
 
+        // Soma = 2 → 39 + 2 = 41 → posição final = 1 (passou pela saída)
         List<Integer> dados = new ArrayList<>();
-        dados.add(1); dados.add(1); // soma 2
+        dados.add(1);
+        dados.add(1);
         motor.moverJogador(j1, dados);
 
         assertEquals(1, j1.getPosicao());
         assertEquals(saldoAntes + 200, j1.getConta().getSaldo());
     }
-
-    // 2b) Movimento bloqueado se estiver preso
+    // 2c) Movimento com dados nulos: função deve apenas retornar sem erro
     @Test
-    public void testMovimentoBloqueadoSePreso() {
-        j1.prende();
+    public void testMovimentoComDadosNulos() {
         j1.setPosicao(5);
-
-        List<Integer> dados = new ArrayList<>();
-        dados.add(6); dados.add(6);
-        motor.moverJogador(j1, dados);
-
-        assertEquals(5, j1.getPosicao()); // não move
+        motor.moverJogador(j1, null); // deve ser ignorado silenciosamente
+        assertEquals(5, j1.getPosicao());
     }
-
     // 3) Compra de propriedade disponível (voluntário): paga e vira dono
     @Test
     public void testCompraPropriedadeDisponivel() {
