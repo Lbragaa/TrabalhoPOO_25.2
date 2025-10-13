@@ -29,7 +29,7 @@ public class MotorDeJogo {
                 && dados.get(0) != null && dados.get(1) != null
                 && dados.get(0).intValue() == dados.get(1).intValue();
     }
-// 2️⃣ Mover jogador (agora bloqueia se estiver preso)
+// Mover jogador (agora bloqueia se estiver preso)
     public void moverJogador(Jogador jogador, List<Integer> dados) {
         if (jogador == null || dados == null || dados.isEmpty()) return;
     
@@ -65,7 +65,7 @@ public class MotorDeJogo {
 
     
 
-    // 3️⃣ Comprar propriedade (sem dono)
+    // Comprar propriedade (sem dono)
     public void comprarPropriedade(Jogador jogador, Propriedade propriedade) {
         if (propriedade.estaDisponivel()) {
             boolean pagou = jogador.getConta().paga(banco.getConta(), propriedade.getPreco());
@@ -77,7 +77,7 @@ public class MotorDeJogo {
         }
     }
 
-    // 4️⃣ Construir casa (apenas terrenos)
+    // Construir casa (apenas terrenos)
     public void construirCasa(Jogador jogador, Propriedade propriedade) { 
     	Propriedade atual = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
     	if (propriedade != atual) return; // só constrói se estiver na propriedade
@@ -93,7 +93,7 @@ public class MotorDeJogo {
         }
     }
 
-// 5️⃣ Pagar aluguel automaticamente (com falência integrada)
+// Pagar aluguel automaticamente (com falência integrada)
     public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
         if (jogador == null || propriedade == null) return;
 
@@ -126,7 +126,7 @@ public class MotorDeJogo {
 
 
 
-    // 6️⃣ Verificar prisão (entrada/saída)
+    // Verificar prisão (entrada/saída)
     public void verificarPrisao(Jogador jogador) {
         if (jogador == null) return;
         else if (tabuleiro.isCasaPrisao(jogador.getPosicao())) {
@@ -163,7 +163,7 @@ public class MotorDeJogo {
         return true;
     }
 
-    // 7️⃣ Verificar falência e remover jogador do jogo
+    // Verificar falência e remover jogador do jogo
     public boolean verificarFalencia(Jogador jogador) {
         
         if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
