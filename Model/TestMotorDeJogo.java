@@ -121,6 +121,23 @@ public class TestMotorDeJogo {
         motor.construirCasa(j1, t);
         assertEquals(0, t.getNumCasas());
     }
+    
+    // 4c) Tentar construir em um terreno que NÃO pertence ao jogador: não deve adicionar casa
+    @Test
+    public void testConstruirCasaEmTerrenoDeOutroJogador() {
+        Terreno t = new Terreno("Campo Dourado", 200, 100, 40, 10);
+        tabuleiro.addPropriedade(t);
+
+        // j2 compra o terreno, j1 tenta construir
+        motor.comprarPropriedade(j2, t);
+        j1.setPosicao(10);
+        int casasAntes = t.getNumCasas();
+
+        motor.construirCasa(j1, t);
+
+        assertEquals(casasAntes, t.getNumCasas()); // nada muda
+        assertEquals(j2, t.getProprietario());
+    }
 
     // 5) Aluguel automático: terreno só cobra se >=1 casa
     @Test
@@ -137,7 +154,7 @@ public class TestMotorDeJogo {
 
         j1.setPosicao(9);
         List<Integer> dados = new ArrayList<>();
-        dados.add(2); dados.add(0); // 9 -> 11
+        dados.add(1); dados.add(1); // 9 -> 11
         motor.moverJogador(j1, dados);
 
         assertEquals(saldoJ1 - 30, j1.getConta().getSaldo());
@@ -157,12 +174,36 @@ public class TestMotorDeJogo {
         int s2 = j2.getConta().getSaldo();
 
         List<Integer> dados = new ArrayList<>();
-        dados.add(2); dados.add(0); // 6 -> 8
+        dados.add(1); dados.add(1); // 6 -> 8
         motor.moverJogador(j1, dados);
 
         assertEquals(s1 - 25, j1.getConta().getSaldo());
         assertEquals(s2 + 25, j2.getConta().getSaldo());
     }
+    
+    // 5c) Tentar cobrar aluguel de um terreno com 0 casas: não deve cobrar
+    @Test
+    public void testNaoCobraAluguelSemCasas() {
+        Terreno t = new Terreno("Bairro Vazio", 150, 100, 25, 12);
+        tabuleiro.addPropriedade(t);
+
+        // j2 é dono, mas ainda sem casas
+        motor.comprarPropriedade(j2, t);
+        j1.setPosicao(10);
+
+        int saldoJ1Antes = j1.getConta().getSaldo();
+        int saldoJ2Antes = j2.getConta().getSaldo();
+
+        // j1 cai na posição 12
+        List<Integer> dados = new ArrayList<>();
+        dados.add(1); dados.add(1); // 10 -> 12
+        motor.moverJogador(j1, dados);
+
+        // Nenhum valor deve mudar
+        assertEquals(saldoJ1Antes, j1.getConta().getSaldo());
+        assertEquals(saldoJ2Antes, j2.getConta().getSaldo());
+    }
+
 
     // 6) Prisão: cair em "vai pra prisão" prende
     @Test
@@ -171,7 +212,7 @@ public class TestMotorDeJogo {
         j1.setPosicao(posVaiPrisao - 2);
 
         List<Integer> dados = new ArrayList<>();
-        dados.add(2); dados.add(0);
+        dados.add(1); dados.add(1);
         motor.moverJogador(j1, dados);
 
         assertTrue(j1.estaPreso());
@@ -212,7 +253,7 @@ public class TestMotorDeJogo {
         j1.setPosicao(25);
 
         List<Integer> dados = new ArrayList<>();
-        dados.add(2); dados.add(0); // 25 -> 27
+        dados.add(1); dados.add(1); // 25 -> 27
         motor.moverJogador(j1, dados);
 
         assertTrue(j1.isFalido());
