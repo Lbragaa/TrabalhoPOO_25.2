@@ -93,37 +93,37 @@ public void moverJogador(Jogador jogador, List<Integer> dados) {
         }
     }
 
-    // 5️⃣ Pagar aluguel automaticamente
-    // Em Acoes.java (mesmo package 'model')
+// 5️⃣ Pagar aluguel automaticamente (com falência integrada)
     public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
         if (jogador == null || propriedade == null) return;
-    
-        // Se não há dono ou o dono é o próprio jogador, não paga
-        Jogador dono = propriedade.proprietario; // campo protegido; OK no mesmo package
+
+        Jogador dono = propriedade.proprietario;
         if (dono == null || dono == jogador) return;
-    
-        int valorAPagar;
-    
-        if (propriedade instanceof Terreno) {
-            Terreno t = (Terreno) propriedade;
-    
-            // Regra atualizada: "pelo menos 1 casa"
-            if (t.getNumCasas() >= 1) {
-                valorAPagar = t.calculaAluguel(); // terreno com casas: usa cálculo do terreno
+
+        int valorAPagar = 0;
+
+        if (propriedade instanceof Terreno terreno) {
+            if (terreno.getNumCasas() >= 1) {
+                valorAPagar = terreno.calculaAluguel();
             } else {
-                // Else explícito: não paga nada e retorna
-                return;
+                return; // terreno sem casa não cobra
             }
         } else {
-            // Propriedade genérica (sem casas): paga aluguel base
-            valorAPagar = propriedade.aluguelBase; // protegido; OK no mesmo package
+            valorAPagar = propriedade.calculaAluguel();
         }
-    
+
         boolean pagou = jogador.getConta().paga(dono.getConta(), valorAPagar);
         if (!pagou) {
+            // Força saldo negativo para refletir débito
+            int saldoAtual = jogador.getConta().getSaldo();
+            jogador.getConta().setSaldo(saldoAtual - valorAPagar);
+
+            jogador.setFalido(true);
             verificarFalencia(jogador);
+            System.out.println(jogador.getNome() + " não conseguiu pagar o aluguel (" + valorAPagar + ") e faliu!");
         }
-    }
+}
+
 
 
     // 6️⃣ Verificar prisão (entrada/saída)
@@ -164,7 +164,7 @@ public void moverJogador(Jogador jogador, List<Integer> dados) {
     }
 
     // 7️⃣ Verificar falência e remover jogador do jogo
-    boolean verificarFalencia(Jogador jogador) {
+    public boolean verificarFalencia(Jogador jogador) {
         
         if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
             jogador.setFalido(true);
