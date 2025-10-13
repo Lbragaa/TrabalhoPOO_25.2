@@ -1,5 +1,9 @@
 package Model;
 
+/**
+ * Representa um jogador no jogo Banco Imobiliário.
+ * Mantém informações sobre nome, conta bancária, posição, status de prisão, falência e cartas de liberação.
+ */
 class Jogador {
 
     private String nome;
@@ -18,6 +22,13 @@ class Jogador {
     }
 
     // --------- MOVIMENTAÇÃO ---------
+
+	/**
+     * Move o jogador no tabuleiro.
+     * Se passar pela casa inicial, recebe $200 do banco.
+     * @param casas Número de casas a se mover.
+     * @param banco Banco do jogo para pagamento de passagem pela saída.
+     */
 	public void move(int casas, Banco banco) {
 	    int novaPosicao = posicao + casas;
 	
@@ -30,14 +41,25 @@ class Jogador {
 	}
 
     // --------- PRISÃO ---------
+
+	/**
+     * Coloca o jogador na prisão e move para a posição da prisão.
+     */
     public void prende() {
         this.preso = true;
         this.posicao = Tabuleiro.getPosicaoVisitaPrisao(); //posicao de fato da prisao 10 e nao pra VAI PRA PRISAO 26
     }
 
+	/**
+     * Libera o jogador da prisão.
+     */
     public void solta() {
         this.preso = false;
     }
+
+	/**
+     * Adiciona uma carta de liberação da prisão ao jogador.
+     */
     void adicionarCartaLiberacao() {
         this.cartasLiberacao++;
     }
@@ -77,17 +99,28 @@ class Jogador {
 
     // Antes tava toda hora criando um banco novo. Desse jeito, o metodo de jogador espera que exista algum banco que ira pagar ou receber.
     // Tem que considerar tambem que esses metodos nao estao sendo usados. A maioria das coisas esta sendo feita com os metodos de conta, ou de banco, tudo controlado pelo Acoes.
-    public void pagarAoBanco(Banco banco, int valor) {
+    
+	/**
+     * Paga um valor ao banco.
+     * @param banco Banco do jogo.
+     * @param valor Valor a pagar.
+     */
+	public void pagarAoBanco(Banco banco, int valor) {
     	banco.receberPagamento(this.conta, valor);
 	}
-	
+
+	/**
+     * Recebe um valor do banco.
+     * @param banco Banco do jogo.
+     * @param valor Valor a receber.
+     */
 	public void receberDoBanco(Banco banco, int valor) {
 	    banco.pagarPara(conta, valor);
 	}
 
      /**
-     * Consome 1 carta de liberação, se houver.
-     * @return true se consumiu; false se não tinha.
+     * Consome uma carta de liberação da prisão, se houver.
+     * @return true se consumiu a carta, false caso não tenha nenhuma.
      */
     boolean consumirCartaLiberacao() {
         if (this.cartasLiberacao > 0) {
