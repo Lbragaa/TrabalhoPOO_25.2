@@ -252,6 +252,7 @@ public final class GameFacade {
         tabuleiro.addPropriedade(new Terreno("Av. Pacaembú",               260, 130,26, 14));
         tabuleiro.addPropriedade(new Terreno("Interlagos",                 280, 140,28, 17));
         tabuleiro.addPropriedade(new Terreno("Morumbi",                    300, 150,30, 19));
+        tabuleiro.addPropriedade(new Terreno("Flamengo",                    300, 150,30, 19));
         tabuleiro.addPropriedade(new Propriedade("Companhia 3",            240, 30,    15));
         tabuleiro.addPropriedade(new Propriedade("Companhia 4",            260, 33,    25));
         tabuleiro.addPropriedade(new Propriedade("Companhia 5",            280, 36,    32));
