@@ -80,7 +80,7 @@ public class PlayerSetupDialog extends JDialog {
     // ---- STEP 2 ----
     @SuppressWarnings("unchecked")
     private void buildStep2() {
-        playersPanel = boxPanel("Jogadores: nome (até 8) + cor (sem repetir)");
+        playersPanel = boxPanel("Jogadores: nome (até 8) + cor do pino (sem repetir)");
         cardPanel.add(playersPanel, "players");
     }
 
@@ -97,6 +97,8 @@ public class PlayerSetupDialog extends JDialog {
             nameFields[i].setDocument(new LimitedDocument(8)); // limita a 8 chars
             colorBoxes[i] = new JComboBox<>(palette.toArray(new ColorItem[0]));
             colorBoxes[i].setRenderer(new ColorCellRenderer());
+            // pré-seleciona cores distintas (0..5) para evitar repetição inicial
+            colorBoxes[i].setSelectedIndex(Math.min(i, palette.size()-1));
 
             playersPanel.add(lbl,           gbc(0, i+1));
             playersPanel.add(nameFields[i], gbc(1, i+1));
@@ -205,26 +207,26 @@ public class PlayerSetupDialog extends JDialog {
         return p;
     }
 
-    // paleta
+    // Paleta fixa: exatamente as 6 cores dos pinos
     private record ColorItem(String name, Color color) { @Override public String toString(){ return name; } }
     private static List<ColorItem> defaultPalette() {
         List<ColorItem> list = new ArrayList<>();
-        list.add(new ColorItem("Vermelho", new Color(220, 20, 60)));
-        list.add(new ColorItem("Azul",     new Color(25, 130, 196)));
-        list.add(new ColorItem("Verde",    new Color(34, 139, 34)));
-        list.add(new ColorItem("Laranja",  new Color(255, 140, 0)));
-        list.add(new ColorItem("Roxo",     new Color(148, 0, 211)));
-        list.add(new ColorItem("Amarelo",  new Color(240, 200, 0)));
+        list.add(new ColorItem("Vermelho", Color.RED));    // pin0
+        list.add(new ColorItem("Azul",     Color.BLUE));   // pin1
+        list.add(new ColorItem("Laranja",  Color.ORANGE)); // pin2
+        list.add(new ColorItem("Amarelo",  Color.YELLOW)); // pin3
+        list.add(new ColorItem("Rosa",     Color.PINK));   // pin4
+        list.add(new ColorItem("Cinza",    Color.GRAY));   // pin5
         return list;
     }
     private static String colorName(Color c) {
-        if (c==null) return "?";
-        if (c.equals(new Color(220,20,60))) return "Vermelho";
-        if (c.equals(new Color(25,130,196))) return "Azul";
-        if (c.equals(new Color(34,139,34))) return "Verde";
-        if (c.equals(new Color(255,140,0))) return "Laranja";
-        if (c.equals(new Color(148,0,211))) return "Roxo";
-        if (c.equals(new Color(240,200,0))) return "Amarelo";
+        if (c == null) return "?";
+        if (c.equals(Color.RED))    return "Vermelho";
+        if (c.equals(Color.BLUE))   return "Azul";
+        if (c.equals(Color.ORANGE)) return "Laranja";
+        if (c.equals(Color.YELLOW)) return "Amarelo";
+        if (c.equals(Color.PINK))   return "Rosa";
+        if (c.equals(Color.GRAY))   return "Cinza";
         return "Cor";
     }
 

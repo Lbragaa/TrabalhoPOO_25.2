@@ -6,6 +6,7 @@ import java.util.*;
  * Resolve imagens de cartas para a casa onde o peão parou.
  * - Sorte/Revés: retorna uma chance aleatória de /sorteReves/chance{1..30}.png
  * - Propriedades/Companhias: usa um MAP de índice->caminho (nomes EXATOS em resources)
+ *   com fallbacks de escrita/acentuação comuns.
  */
 public final class CardResolver {
 
@@ -19,8 +20,12 @@ public final class CardResolver {
 
     // Mapa índice->caminho para cartas de propriedade/companhia (nomes EXATOS)
     private static final Map<Integer, String> PROPERTY_MAP = new LinkedHashMap<>();
+
+    // Fallbacks por casa para variações de nome/acentos/abreviações
+    private static final Map<Integer, List<String>> PROPERTY_ALIASES = new HashMap<>();
+
     static {
-        // Territórios
+        // Territórios (principal)
         PROPERTY_MAP.put(1,  "/territorios/Leblon.png");
         PROPERTY_MAP.put(3,  "/territorios/Av. Presidente Vargas.png");
         PROPERTY_MAP.put(4,  "/territorios/Av. Nossa S. de Copacabana.png");
@@ -32,9 +37,9 @@ public final class CardResolver {
         PROPERTY_MAP.put(14, "/territorios/Av. Pacaembú.png");
         PROPERTY_MAP.put(17, "/territorios/Interlagos.png");
         PROPERTY_MAP.put(19, "/territorios/Morumbi.png");
-        // (RJ/SP meio do tabuleiro — inclua somente se existirem no Model)
+
         PROPERTY_MAP.put(21, "/territorios/Flamengo.png");
-        PROPERTY_MAP.put(23, "/territorios/Botafogo.png"); // (dedup: só uma vez)
+        PROPERTY_MAP.put(23, "/territorios/Botafogo.png");
         PROPERTY_MAP.put(26, "/territorios/Av. Brasil.png");
         PROPERTY_MAP.put(28, "/territorios/Av. Paulista.png");
         PROPERTY_MAP.put(29, "/territorios/Jardim Europa.png");
@@ -53,6 +58,32 @@ public final class CardResolver {
         PROPERTY_MAP.put(25, "/companhias/company4.png");
         PROPERTY_MAP.put(32, "/companhias/company5.png");
         PROPERTY_MAP.put(35, "/companhias/company6.png");
+
+        // ---- ALIASES (variações comuns de arquivo) ----
+        // 3: abreviação comum
+        PROPERTY_ALIASES.put(3, List.of(
+                "/territorios/Av. Pres. Vargas.png"
+        ));
+        // 4: abreviação comum
+        PROPERTY_ALIASES.put(4, List.of(
+                "/territorios/Av. N. S. Copacabana.png"
+        ));
+        // 6: erro de digitação comum (“Brigadero”)
+        PROPERTY_ALIASES.put(6, List.of(
+                "/territorios/Av. Brigadero Faria Lima.png"
+        ));
+        // 14: sem acento
+        PROPERTY_ALIASES.put(14, List.of(
+                "/territorios/Av. Pacaembu.png"
+        ));
+        // 34: sem acento
+        PROPERTY_ALIASES.put(34, List.of(
+                "/territorios/Av. Atlantica.png"
+        ));
+        // 39: variação inglesa (caso exista)
+        PROPERTY_ALIASES.put(39, List.of(
+                "/territorios/Brooklyn.png"
+        ));
     }
 
     private CardResolver(){}
@@ -69,8 +100,15 @@ public final class CardResolver {
 
     /** Caminho para a carta da propriedade/companhia daquela casa (ou null se não mapeada/arquivo ausente). */
     public static String propertyCardPath(int cellIndex) {
-        String path = PROPERTY_MAP.get(normalize(cellIndex));
-        return (path != null && resourceExists(path)) ? path : null;
+        int c = normalize(cellIndex);
+        String primary = PROPERTY_MAP.get(c);
+        if (primary != null && resourceExists(primary)) return primary;
+
+        List<String> alts = PROPERTY_ALIASES.getOrDefault(c, Collections.emptyList());
+        for (String alt : alts) {
+            if (resourceExists(alt)) return alt;
+        }
+        return null;
     }
 
     /** Registre/ajuste um mapeamento (índice -> caminho do arquivo). */
@@ -88,7 +126,6 @@ public final class CardResolver {
             String p = "/sorteReves/chance" + i + ".png";
             if (resourceExists(p)) list.add(p);
         }
-        // Se nada encontrado (nomes diferentes), deixe uma lista padrão para não quebrar:
         if (list.isEmpty()) for (int i = 1; i <= 30; i++) list.add("/sorteReves/chance" + i + ".png");
         return Collections.unmodifiableList(list);
     }
