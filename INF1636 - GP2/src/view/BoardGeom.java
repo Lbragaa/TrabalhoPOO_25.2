@@ -17,10 +17,23 @@ public final class BoardGeom {
         int c = ((cell % 40) + 40) % 40;
 
         int cx, cy;
-        if (c <= 10) { cx = bx + margin + side - (c * step) - step/2; cy = by + margin + side + step/2; }
-        else if (c <= 20) { int k = c - 10; cx = bx + margin - step/2; cy = by + margin + side - (k * step) - step/2; }
-        else if (c <= 30) { int k = c - 20; cx = bx + margin + (k * step) + step/2; cy = by + margin - step/2; }
-        else { int k = c - 30; cx = bx + margin + side + step/2; cy = by + margin + (k * step) + step/2; }
+        if (c < 10) { // borda inferior: 0..9
+            int k = c;
+            cx = bx + margin + side - (k * step) - step/2;
+            cy = by + margin + side + step/2;
+        } else if (c < 20) { // borda esquerda: 10..19
+            int k = c - 10;
+            cx = bx + margin - step/2;
+            cy = by + margin + side - (k * step) - step/2;
+        } else if (c < 30) { // borda superior: 20..29
+            int k = c - 20;
+            cx = bx + margin + (k * step) + step/2;
+            cy = by + margin - step/2;
+        } else { // borda direita: 30..39
+            int k = c - 30;
+            cx = bx + margin + side + step/2;
+            cy = by + margin + (k * step) + step/2;
+        }
         return new Point(cx, cy);
     }
 
