@@ -7,7 +7,6 @@ import view.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Collections;
 import java.util.List;
 
 /** Controller da UI que conversa APENAS com o GameFacade. */
@@ -37,7 +36,7 @@ public class UIController implements GameObserver {
     private void wire() {
         dice.rollButton().addActionListener(e -> {
             int v1 = dice.forcedD1(), v2 = dice.forcedD2();
-            game.rolarDadosForcado(v1, v2);     // backend faz tudo e nos notifica
+            game.rolarDadosForcado(v1, v2); // backend notifica via observer
         });
         dice.randomButton().addActionListener(e -> game.rolarDadosAleatorio());
     }
@@ -49,24 +48,26 @@ public class UIController implements GameObserver {
     }
 
     @Override public void onMoved(int playerIndex, int fromCell, int toCell) {
-        // Sincroniza a posição local para o desenho
+        // Sincroniza posição para desenho
         ui.setPos(playerIndex, toCell);
 
         // Atualiza painel lateral (imagem/carta)
         boolean isChance = CardResolver.isChanceCell(toCell);
-        Color ownerColor = (!isChance ? ui.getCor(playerIndex) : null);
+        Color ownerColor = null;
+        if (!isChance) {
+            Integer ownerIdx = game.getIndiceDonoDaPosicao(toCell);
+            ownerColor = (ownerIdx != null ? ui.getCor(ownerIdx) : null);
+        }
         String title  = isChance ? "Sorte/Revés" : ("Casa " + toCell);
         String detail = isChance
                 ? "Carta sorteada aleatoriamente."
                 : ui.getNome(playerIndex) + " parou na casa " + toCell + ".";
         property.showForCell(toCell, isChance, ownerColor, title, detail);
 
-        // Se o motor prendeu o jogador (caiu na 30), avisa visualmente
+        // Prisão (ex.: caiu em Vá para a Prisão)
         if (game.jogadorEstaPreso(playerIndex)) {
             JOptionPane.showMessageDialog(board,
-                    ui.getNome(playerIndex) + " foi preso e foi para a casa " +
-                    // casa de visita/prisão (10)
-                    "10.",
+                    ui.getNome(playerIndex) + " foi preso e foi para a casa 10.",
                     "Prisão", JOptionPane.INFORMATION_MESSAGE);
         }
 
@@ -110,8 +111,8 @@ public class UIController implements GameObserver {
     // ----------------- HUD -----------------
     private void refreshHud(int playerIndex) {
         if (hud == null) return;
-        int saldo = game.getSaldo(playerIndex);              // agora vem do backend
-        List<String> props = Collections.emptyList();        // (preencher na iteração 3)
+        int saldo = game.getSaldo(playerIndex);
+        List<String> props = game.getPropriedadesDoJogador(playerIndex);
         hud.updateHud(ui.getNome(playerIndex), ui.getCor(playerIndex), saldo, props);
     }
 }
