@@ -5,9 +5,9 @@ import java.awt.*;
 import java.util.List;
 
 public class PlayerHudPanel extends JPanel {
-    private final JLabel lblPlayer = new JLabel("Jogador: —");
+    private final JLabel lblPlayer  = new JLabel("Jogador: —");
     private final JLabel lblBalance = new JLabel("Saldo: R$ —");
-    private final JComboBox<String> comboProps = new JComboBox<>();
+    private final JButton btnVerProps = new JButton("Ver propriedades");
 
     public PlayerHudPanel() {
         setOpaque(false);
@@ -18,23 +18,24 @@ public class PlayerHudPanel extends JPanel {
         c.gridy = 0; c.anchor = GridBagConstraints.WEST;
 
         lblPlayer.setFont(lblPlayer.getFont().deriveFont(Font.BOLD, 14f));
-        comboProps.setPrototypeDisplayValue("Propriedade bem comprida…");
-        comboProps.setFocusable(false);
 
         c.gridx = 0; add(lblPlayer, c);
         c.gridx = 1; add(lblBalance, c);
-        c.gridx = 2; add(new JLabel("Propriedades:"), c);
-        c.gridx = 3; c.fill = GridBagConstraints.HORIZONTAL; c.weightx = 1.0;
-        add(comboProps, c);
+        c.gridx = 2; c.weightx = 1.0; c.fill = GridBagConstraints.HORIZONTAL; add(Box.createHorizontalStrut(1), c); // filler
+        c.gridx = 3; c.weightx = 0; c.fill = GridBagConstraints.NONE; add(btnVerProps, c);
     }
 
-    /** Atualiza nome/cor/saldo e a lista de propriedades. */
+    /** Mantém a mesma assinatura para não quebrar o controller. */
     public void updateHud(String nome, Color cor, int saldo, List<String> props) {
         lblPlayer.setText("Jogador: " + (nome != null ? nome : "—"));
         lblPlayer.setForeground(cor != null ? cor : Color.BLACK);
         lblBalance.setText("Saldo: R$ " + saldo);
-        comboProps.removeAllItems();
-        if (props != null && !props.isEmpty()) for (String p : props) comboProps.addItem(p);
-        else comboProps.addItem("—");
+        // Usar props apenas para indicar quantas há e habilitar/desabilitar o botão
+        int n = (props != null ? props.size() : 0);
+        btnVerProps.setText(n > 0 ? "Ver propriedades (" + n + ")" : "Ver propriedades");
+        btnVerProps.setEnabled(n > 0);
     }
+
+    /** Exposto para o controller ouvir o clique. */
+    public JButton viewPropsButton() { return btnVerProps; }
 }

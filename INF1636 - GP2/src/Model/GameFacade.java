@@ -89,6 +89,19 @@ public final class GameFacade {
         // (Se quiser devolver objetos, crie uma DTO, mas p/ HUD nomes bastam.)
     }
 
+    // NOVO: células das propriedades do jogador (para abrir cartas por clique)
+    public List<Integer> getCelulasPropriedadesDoJogador(int playerIndex) {
+    List<Integer> out = new ArrayList<>();
+    if (playerIndex < 0 || playerIndex >= jogadores.size()) return out;
+    Jogador dono = jogadores.get(playerIndex);
+    for (int pos = 0; pos < 40; pos++) {
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
+        if (p != null && p.getProprietario() == dono) out.add(pos);
+    }
+    return out;
+}
+
+
     /** Índice do dono da propriedade na 'cell' (ou null se não houver). */
     public Integer getIndiceDonoDaPosicao(int cell) {
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(norm40(cell));
