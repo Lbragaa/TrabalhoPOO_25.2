@@ -9,6 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
+/** Diálogo de configuração da partida (3 passos):
+ *  (1) quantidade de jogadores; (2) nomes (1..8) e cores distintas; (3) ordem sorteada.
+ *  Retorna dados via getters após confirmar.
+ */
+
+
 /** Diálogo de setup:
  *  1) número de jogadores (3..6)
  *  2) nome (<=8 alfanum.) + cor (sem repetir) para cada jogador

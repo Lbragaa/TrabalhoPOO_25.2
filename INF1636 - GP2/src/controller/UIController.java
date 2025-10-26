@@ -9,15 +9,27 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-/** Controller da UI que conversa APENAS com o GameFacade. */
+/**
+ * Controlador da UI (MVC).
+ * <p>
+ * Responsável por:
+ * - Ligar eventos da interface (botões) às ações do modelo via {@link GameFacade} (Padrão Façade).
+ * - Assinar eventos do jogo implementando {@link GameObserver} (Padrão Observer).
+ * - Atualizar HUD, painel do tabuleiro e painel de propriedades/cartas.
+ * <p>
+ * Importante: conversa APENAS com o {@link GameFacade} (não acessa diretamente entidades do domínio).
+ */
 public class UIController implements GameObserver {
-    private final BoardPanel board;
-    private final DicePanel dice;
-    private final UiState ui;
-    private final PropertyPanel property;
-    private final PlayerHudPanel hud;
-    private final GameFacade game;
+    private final BoardPanel board;          // Desenha o tabuleiro e peões (Java2D)
+    private final DicePanel dice;            // Controles/rostos dos dados
+    private final UiState ui;                // Estado de exibição (nomes, cores, posições)
+    private final PropertyPanel property;    // Carta de propriedade / sorte-revés
+    private final PlayerHudPanel hud;        // HUD do jogador da vez
+    private final GameFacade game;           // Façade para o modelo
 
+    /**
+     * Constrói o controlador, registra-se como observador do jogo e inicializa o HUD.
+     */
     public UIController(BoardPanel board, DicePanel dice, UiState ui,
                         PropertyPanel property, PlayerHudPanel hud,
                         GameFacade game) {
@@ -29,6 +41,12 @@ public class UIController implements GameObserver {
         wire();
     }
 
+    /**
+     * Conecta ações de UI às operações do jogo:
+     * - Rolar dados forçados (teste)
+     * - Rolar dados aleatórios
+     * - Ver propriedades do jogador da vez
+     */
     private void wire() {
         dice.rollButton().addActionListener(e -> {
             int v1 = dice.forcedD1(), v2 = dice.forcedD2();
@@ -36,10 +54,13 @@ public class UIController implements GameObserver {
         });
         dice.randomButton().addActionListener(e -> game.rolarDadosAleatorio());
 
-        // Ver propriedades do jogador da vez
         hud.viewPropsButton().addActionListener(e -> showOwnedPropertiesDialog());
     }
 
+    /**
+     * Exibe lista de propriedades do jogador da vez e, ao selecionar, mostra a carta da propriedade.
+     * Ao fechar, restaura a carta da célula atual do jogador.
+     */
     private void showOwnedPropertiesDialog() {
         int playerIndex = game.getIndiceJogadorDaVez();
         int currentCell = game.getPosicao(playerIndex);
@@ -48,6 +69,7 @@ public class UIController implements GameObserver {
         List<Integer> cells = game.getCelulasPropriedadesDoJogador(playerIndex);
 
         if (names.isEmpty()) {
+            // Nota: para evitar diálogos informativos simples, poderíamos exibir um aviso no HUD.
             JOptionPane.showMessageDialog(board, "Este jogador não possui propriedades.",
                     "Propriedades", JOptionPane.INFORMATION_MESSAGE);
             restoreCurrentCellCard(playerIndex, currentCell);
@@ -60,7 +82,6 @@ public class UIController implements GameObserver {
         JScrollPane sp = new JScrollPane(list);
         sp.setPreferredSize(new Dimension(320, 200));
 
-        // Selecionar => mostrar carta da propriedade escolhida
         list.addListSelectionListener(ev -> {
             if (!ev.getValueIsAdjusting()) {
                 int sel = list.getSelectedIndex();
@@ -81,10 +102,12 @@ public class UIController implements GameObserver {
                 "Propriedades de " + ui.getNome(playerIndex),
                 JOptionPane.PLAIN_MESSAGE);
 
-        // Ao fechar o diálogo, restaurar carta da casa atual
         restoreCurrentCellCard(playerIndex, currentCell);
     }
 
+    /**
+     * Restaura a carta da célula atual (propriedade ou sorte/revés) no painel de propriedades.
+     */
     private void restoreCurrentCellCard(int playerIndex, int cell) {
         boolean isChance = CardResolver.isChanceCell(cell);
         Integer ownerIdx = (!isChance ? game.getIndiceDonoDaPosicao(cell) : null);
@@ -98,12 +121,21 @@ public class UIController implements GameObserver {
         board.repaint();
     }
 
-    // ----------------- GameObserver -----------------
+    // ----------------- Callbacks do Observer -----------------
+
+    /** Atualiza faces e valores forçados dos dados quando o modelo notifica. */
     @Override public void onDice(int d1, int d2) {
         dice.setForced(d1, d2);
         dice.setFaces(d1, d2);
     }
 
+    /**
+     * Ao mover o peão:
+     * - atualiza posição exibida,
+     * - mostra carta da célula,
+     * - trata compra/ construção quando aplicável,
+     * - exibe informação de prisão sem diálogo (no painel de propriedades).
+     */
     @Override public void onMoved(int playerIndex, int fromCell, int toCell) {
         ui.setPos(playerIndex, toCell);
 
@@ -117,12 +149,20 @@ public class UIController implements GameObserver {
                 : ui.getNome(playerIndex) + " parou na casa " + toCell + "." + ownerTxt;
         property.showForCell(toCell, isChance, ownerColor, title, detail);
 
+        // ---- Sem diálogo: mostrar aviso de prisão no painel de propriedades ----
         if (game.jogadorEstaPreso(playerIndex)) {
-            JOptionPane.showMessageDialog(board,
-                    ui.getNome(playerIndex) + " foi preso e foi para a casa 10.",
-                    "Prisão", JOptionPane.INFORMATION_MESSAGE);
+            int cellPrisao = 10;
+            Integer donoPrisao = game.getIndiceDonoDaPosicao(cellPrisao);
+            Color corDonoPrisao = (donoPrisao != null ? ui.getCor(donoPrisao) : null);
+            property.showForCell(
+                    cellPrisao, /*isChance=*/false, corDonoPrisao,
+                    "Prisão",
+                    ui.getNome(playerIndex) + " foi preso e enviado para a casa 10."
+            );
+            board.repaint();
         }
 
+        // Decisões de propriedade (comprar/construir)
         if (game.posicaoTemPropriedade(toCell)) {
             if (game.propriedadeDisponivel(toCell)) {
                 String nomeProp = game.getNomePropriedade(toCell);
@@ -151,6 +191,7 @@ public class UIController implements GameObserver {
         board.repaint();
     }
 
+    /** Ao trocar o turno, atualiza HUD e destaque do jogador da vez. */
     @Override public void onTurnChanged(int currentPlayerIndex) {
         ui.setJogadorDaVez(currentPlayerIndex);
         refreshHud(currentPlayerIndex);
@@ -158,6 +199,10 @@ public class UIController implements GameObserver {
     }
 
     // ----------------- HUD -----------------
+
+    /**
+     * Atualiza o HUD com nome, cor, saldo e lista de propriedades do jogador.
+     */
     private void refreshHud(int playerIndex) {
         if (hud == null) return;
         int saldo = game.getSaldo(playerIndex);

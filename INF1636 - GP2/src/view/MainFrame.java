@@ -7,6 +7,7 @@ import infra.UiState;
 import javax.swing.*;
 import java.awt.*;
 
+/** Janela principal: monta a UI, inicializa GameFacade e conecta o UIController. */
 public class MainFrame extends JFrame {
     public MainFrame() {
         super("Banco Imobiliário — Iteração 2");
@@ -30,7 +31,7 @@ public class MainFrame extends JFrame {
         PlayerHudPanel hud = new PlayerHudPanel();
         DicePanel dice = new DicePanel();
 
-        // Usa Singleton do GameFacade
+        // Façade (Singleton)
         GameFacade game = GameFacade.init(nomes, ordem);
 
         JPanel root = new JPanel(new BorderLayout());

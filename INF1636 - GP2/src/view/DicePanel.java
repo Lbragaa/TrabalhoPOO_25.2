@@ -7,16 +7,37 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.stream.IntStream;
 
-/** Barra dos dados: forçar valores, lançar e rolar aleatoriamente (faces em Java2D). */
+/** Barra dos dados: forçar valores, lançar e rolar aleatoriamente, com faces desenhadas em um canvas próprio. */
 public class DicePanel extends JPanel {
     private final JComboBox<Integer> d1, d2;
-    private final JButton rollBtn;        // usa os combos (forçar) — permitido
-    private final JButton randomBtn;      // sorteia 1..6 — permitido
+    private final JButton rollBtn;        // usa os combos (forçar)
+    private final JButton randomBtn;      // rolagem aleatória
 
-    // imagens das faces
+    // imagens das faces 1..6
     private final BufferedImage[] faces = new BufferedImage[7];
-    // último resultado mostrado (para pintar)
+
+    // último resultado mostrado
     private int faceLeft = 1, faceRight = 1;
+
+    // canvas dedicado onde os dados são desenhados (evita sobreposição/corte)
+    private final JComponent diceCanvas = new JComponent() {
+        @Override public Dimension getPreferredSize() { return new Dimension(120, 44); }
+        @Override protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int size = Math.min(getHeight() - 8, 36); // lado do dado
+            int pad  = 6;
+            int totalW = size * 2 + pad;
+            int x = (getWidth() - totalW) / 2;
+            int y = (getHeight() - size) / 2;
+
+            drawFace(g2, faceLeft,  x,            y, size);
+            drawFace(g2, faceRight, x + size+pad, y, size);
+            g2.dispose();
+        }
+    };
 
     public DicePanel() {
         setOpaque(false);
@@ -34,15 +55,21 @@ public class DicePanel extends JPanel {
         rollBtn.setFocusable(false); randomBtn.setFocusable(false);
 
         // carrega faces 1..6
-        for (int i = 1; i <= 6; i++) {
-            faces[i] = ImageStore.load("/dados/die_face_" + i + ".png");
-        }
+        for (int i = 1; i <= 6; i++) faces[i] = ImageStore.load("/dados/die_face_" + i + ".png");
 
+        // linha de controles (GridBag) + canvas na direita
         c.gridx = 0; add(new JLabel("Forçar:"), c);
         c.gridx = 1; add(d1, c);
         c.gridx = 2; add(d2, c);
         c.gridx = 3; add(rollBtn, c);
         c.gridx = 4; add(randomBtn, c);
+
+        c.gridx = 5;
+    c.weightx = 0;                       // não empurra para a borda
+    c.fill = GridBagConstraints.NONE;    // mantém tamanho preferido
+    c.anchor = GridBagConstraints.WEST;  // encosta no botão "Rolar aleatório"
+    c.insets = new Insets(2, 8, 2, 2);   // pequeno espaço à esquerda
+    add(diceCanvas, c);
     }
 
     // --- API usada pelo controller ---
@@ -58,27 +85,11 @@ public class DicePanel extends JPanel {
         d2.setSelectedItem(v2);
     }
 
-    /** Define as faces exibidas (Java2D) e repinta. */
+    /** Define as faces exibidas e repinta o canvas. */
     public void setFaces(int f1, int f2) {
-        faceLeft = Math.max(1, Math.min(6, f1));
+        faceLeft  = Math.max(1, Math.min(6, f1));
         faceRight = Math.max(1, Math.min(6, f2));
-        repaint();
-    }
-
-    @Override protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        int size = 36;               // lado do dado
-        int pad  = 6;
-        int xStart = 380;            // desloca após combos/botões
-        int y = getInsets().top + Math.max(0, (getHeight() - size)/2);
-
-        drawFace(g2, faceLeft,  xStart,           y, size);
-        drawFace(g2, faceRight, xStart + size + pad, y, size);
-
-        g2.dispose();
+        diceCanvas.repaint();
     }
 
     private void drawFace(Graphics2D g2, int face, int x, int y, int size) {
@@ -86,7 +97,6 @@ public class DicePanel extends JPanel {
         if (img != null) {
             g2.drawImage(img, x, y, size, size, null); // drawImage (exigência do enunciado)
         } else {
-            // fallback
             g2.setColor(Color.WHITE); g2.fillRoundRect(x, y, size, size, 6, 6);
             g2.setColor(Color.DARK_GRAY); g2.drawRoundRect(x, y, size, size, 6, 6);
             g2.setFont(g2.getFont().deriveFont(Font.BOLD, 16f));

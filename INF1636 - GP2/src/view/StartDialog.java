@@ -3,7 +3,10 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 
-/** Janela inicial (Iteração 2): define apenas a quantidade de jogadores (3..6). */
+/** Janela inicial (Iteração 2): define apenas a quantidade de jogadores (3..6).
+ *  OBS: o fluxo principal usa PlayerSetupDialog; este dialog é opcional/alternativo.
+ */
+
 public class StartDialog extends JDialog {
     private final JSpinner spinner;
     private boolean confirmed = false;

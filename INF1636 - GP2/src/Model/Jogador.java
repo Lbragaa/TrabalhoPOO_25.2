@@ -1,21 +1,23 @@
 package Model;
 
 /**
- * Representa um jogador no jogo Banco Imobiliário.
- * Mantém informações sobre nome, conta bancária, posição, status de prisão, falência e cartas de liberação.
+ * Representa um jogador: nome, conta, posição, status de prisão/falência e cartas de liberação.
+ * <p>Regra: ao passar pela saída recebe $200 do banco (tratado em {@link #move}).</p>
  */
 class Jogador {
 
     private String nome;
     private ContaBancaria conta;
-    private int posicao;
+    private int posicao;              // 0..39 (o chamador deve normalizar, se necessário)
     private boolean preso;
     private boolean falido;
     private int cartasLiberacao;
+
+    /** Cria jogador com $4000, posição 0, livre e sem cartas. */
     public Jogador(String nome) {
         this.nome = nome;
-        this.conta = new ContaBancaria(4000); // Cada jogador começa com $4000
-        this.posicao = 0;                     // Casa inicial
+        this.conta = new ContaBancaria(4000);
+        this.posicao = 0;
         this.preso = false;
         this.falido = false;
         this.cartasLiberacao = 0;
@@ -23,110 +25,60 @@ class Jogador {
 
     // --------- MOVIMENTAÇÃO ---------
 
-	/**
-     * Move o jogador no tabuleiro.
-     * Se passar pela casa inicial, recebe $200 do banco.
-     * @param casas Número de casas a se mover.
-     * @param banco Banco do jogo para pagamento de passagem pela saída.
+    /**
+     * Move o jogador somando {@code casas}. Se ultrapassar o final do tabuleiro,
+     * normaliza e recebe $200 do banco.
+     * @param casas número de casas a andar (>=0)
+     * @param banco banco compartilhado do jogo
      */
-	public void move(int casas, Banco banco) {
-	    int novaPosicao = posicao + casas;
-	
-	    if (novaPosicao >= Tabuleiro.getNumCasas()) {
-	        novaPosicao %= Tabuleiro.getNumCasas();
-	        banco.pagarPara(conta, 200); // shared banco, nao fica criando toda hora um banco novo
-	    }
-	
-	    this.posicao = novaPosicao;
-	}
+    public void move(int casas, Banco banco) {
+        int novaPosicao = posicao + casas;
+        if (novaPosicao >= Tabuleiro.getNumCasas()) {
+            novaPosicao %= Tabuleiro.getNumCasas();
+            banco.pagarPara(conta, 200);
+        }
+        this.posicao = novaPosicao;
+    }
 
     // --------- PRISÃO ---------
 
-	/**
-     * Coloca o jogador na prisão e move para a posição da prisão.
-     */
+    /** Coloca o jogador na prisão e move para a casa de prisão/visita. */
     public void prende() {
         this.preso = true;
-        this.posicao = Tabuleiro.getPosicaoVisitaPrisao(); //posicao de fato da prisao 10 e nao pra VAI PRA PRISAO 26
+        this.posicao = Tabuleiro.getPosicaoVisitaPrisao();
     }
 
-	/**
-     * Libera o jogador da prisão.
-     */
-    public void solta() {
-        this.preso = false;
-    }
+    /** Libera o jogador da prisão (não move). */
+    public void solta() { this.preso = false; }
 
-	/**
-     * Adiciona uma carta de liberação da prisão ao jogador.
-     */
-    void adicionarCartaLiberacao() {
-        this.cartasLiberacao++;
-    }
-    
+    /** Adiciona uma carta de liberação. */
+    void adicionarCartaLiberacao() { this.cartasLiberacao++; }
+
     // --------- GETTERS E SETTERS ---------
-    public ContaBancaria getConta() {
-        return conta;
-    }
-    public int getCartasLiberacao() {
-        return this.cartasLiberacao;
-    }
-    public int getPosicao() {
-        return posicao;
-    }
 
-    public void setPosicao(int posicao) {
-        this.posicao = posicao;
-    }
-
-    public boolean estaPreso() {
-        return preso;
-    }
-
-    public void setFalido(boolean falido) {
-        this.falido = falido;
-    }
-
-    public boolean isFalido() {
-        return falido;
-    }
-
-    public String getNome() {
-        return nome;
-    }
+    public ContaBancaria getConta() { return conta; }
+    public int getCartasLiberacao() { return this.cartasLiberacao; }
+    public int getPosicao() { return posicao; }
+    public void setPosicao(int posicao) { this.posicao = posicao; } // assumimos normalização externa
+    public boolean estaPreso() { return preso; }
+    public void setFalido(boolean falido) { this.falido = falido; }
+    public boolean isFalido() { return falido; }
+    public String getNome() { return nome; }
 
     // --------- OUTROS ---------
 
-    // Antes tava toda hora criando um banco novo. Desse jeito, o metodo de jogador espera que exista algum banco que ira pagar ou receber.
-    // Tem que considerar tambem que esses metodos nao estao sendo usados. A maioria das coisas esta sendo feita com os metodos de conta, ou de banco, tudo controlado pelo Acoes.
-    
-	/**
-     * Paga um valor ao banco.
-     * @param banco Banco do jogo.
-     * @param valor Valor a pagar.
-     */
-	public void pagarAoBanco(Banco banco, int valor) {
-    	banco.receberPagamento(this.conta, valor);
-	}
+    /** Paga valor ao banco. */
+    public void pagarAoBanco(Banco banco, int valor) { banco.receberPagamento(this.conta, valor); }
 
-	/**
-     * Recebe um valor do banco.
-     * @param banco Banco do jogo.
-     * @param valor Valor a receber.
-     */
-	public void receberDoBanco(Banco banco, int valor) {
-	    banco.pagarPara(conta, valor);
-	}
+    /** Recebe valor do banco. */
+    public void receberDoBanco(Banco banco, int valor) { banco.pagarPara(conta, valor); }
 
-     /**
-     * Consome uma carta de liberação da prisão, se houver.
-     * @return true se consumiu a carta, false caso não tenha nenhuma.
+    /**
+     * Consome carta de liberação, se houver.
+     * @return {@code true} se consumiu; {@code false} caso contrário
      */
     boolean consumirCartaLiberacao() {
-        if (this.cartasLiberacao > 0) {
-            this.cartasLiberacao--;
-            return true;
-        }
+        if (this.cartasLiberacao > 0) { this.cartasLiberacao--; return true; }
         return false;
     }
 }

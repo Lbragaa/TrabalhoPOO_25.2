@@ -1,32 +1,29 @@
 package Model;
 
+/**
+ * Terreno construível (até 4 casas nesta iteração).
+ * <p>Regra de aluguel: com ≥1 casa, cresce em função do nº de casas; sem casa, usa aluguel base.
+ * O Motor só cobra terreno com ≥1 casa, então este retorno base é redundante porém inofensivo.</p>
+ */
 class Terreno extends Propriedade {
 
-	protected int numCasas;
-	protected int ValorCasa;
+    protected int numCasas;
+    protected int valorCasa;
 
-    public Terreno(String nome, int preco, int ValorCasa, int aluguelBase, int posicao) {
+    public Terreno(String nome, int preco, int valorCasa, int aluguelBase, int posicao) {
         super(nome, preco, aluguelBase, posicao);
-        this.ValorCasa = ValorCasa;
+        this.valorCasa = valorCasa;
         this.numCasas = 0;
     }
 
     // --------- CONSTRUÇÃO ---------
-    public boolean podeConstruir() {
-        // Pode construir até 4 casas (sem hotel nesta iteração)
-        return numCasas < 4;
-    }
+    /** Pode construir até 4 casas (sem hotel nesta iteração). */
+    public boolean podeConstruir() { return numCasas < 4; }
 
-   
-    public void adicionaCasa() {
-        if (podeConstruir()) {
-            numCasas++;
-        }
-    }
+    /** Incrementa 1 casa se permitido. */
+    public void adicionaCasa() { if (podeConstruir()) numCasas++; }
 
-    public int getNumCasas() {
-        return numCasas;
-    }
+    public int getNumCasas() { return numCasas; }
 
     // --------- ALUGUEL ---------
     @Override
@@ -36,7 +33,5 @@ class Terreno extends Propriedade {
     }
 
     // --------- GETTERS ---------
-    public int getValorCasa() {
-        return ValorCasa;
-    }
+    public int getValorCasa() { return valorCasa; }
 }

@@ -41,7 +41,7 @@ public final class GameFacade {
         this.banco = new Banco();
         this.tabuleiro = new Tabuleiro();
 
-        // >>> CADASTRO DAS PROPRIEDADES DO TABULEIRO <<<
+        // Propriedades do tabuleiro
         cadastrarPropriedadesPadrao();
 
         // Jogadores
@@ -59,7 +59,7 @@ public final class GameFacade {
         }
 
         this.motor = new MotorDeJogo(banco, tabuleiro);
-        // Se quiser cartas de teste: this.tabuleiro.inicializarBaralhoTeste();
+        // this.tabuleiro.inicializarBaralhoTeste(); // opcional para testes
     }
 
     // ---------- Observer ----------
@@ -67,13 +67,13 @@ public final class GameFacade {
     public void removeObserver(GameObserver o) { observers.remove(o); }
 
     // ---------- Consultas para a UI ----------
-    public int  getIndiceJogadorDaVez()                 { return ordem[turnPtr]; }
-    public int  getPosicao(int playerIndex)             { return jogadores.get(playerIndex).getPosicao(); }
-    public int  getSaldo(int playerIndex)               { return jogadores.get(playerIndex).getConta().getSaldo(); }
-    public boolean jogadorEstaPreso(int playerIndex)    { return jogadores.get(playerIndex).estaPreso(); }
-    public String getNomeJogador(int playerIndex)       { return jogadores.get(playerIndex).getNome(); }
+    public int  getIndiceJogadorDaVez()              { return ordem[turnPtr]; }
+    public int  getPosicao(int playerIndex)          { return jogadores.get(playerIndex).getPosicao(); }
+    public int  getSaldo(int playerIndex)            { return jogadores.get(playerIndex).getConta().getSaldo(); }
+    public boolean jogadorEstaPreso(int playerIndex) { return jogadores.get(playerIndex).estaPreso(); }
+    public String getNomeJogador(int playerIndex)    { return jogadores.get(playerIndex).getNome(); }
 
-    // ----------- NOVAS consultas para HUD / cards -----------
+    // ----------- Consultas para HUD / cards -----------
     /** Lista os nomes das propriedades pertencentes ao jogador. */
     public List<String> getPropriedadesDoJogador(int playerIndex) {
         List<String> out = new ArrayList<>();
@@ -81,26 +81,22 @@ public final class GameFacade {
         Jogador dono = jogadores.get(playerIndex);
         for (int pos = 0; pos < 40; pos++) {
             Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
-            if (p != null && p.getProprietario() == dono) {
-                out.add(p.getNome());
-            }
+            if (p != null && p.getProprietario() == dono) out.add(p.getNome());
         }
         return out;
-        // (Se quiser devolver objetos, crie uma DTO, mas p/ HUD nomes bastam.)
     }
 
-    // NOVO: células das propriedades do jogador (para abrir cartas por clique)
+    /** Células das propriedades do jogador (para abrir cartas por clique). */
     public List<Integer> getCelulasPropriedadesDoJogador(int playerIndex) {
-    List<Integer> out = new ArrayList<>();
-    if (playerIndex < 0 || playerIndex >= jogadores.size()) return out;
-    Jogador dono = jogadores.get(playerIndex);
-    for (int pos = 0; pos < 40; pos++) {
-        Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
-        if (p != null && p.getProprietario() == dono) out.add(pos);
+        List<Integer> out = new ArrayList<>();
+        if (playerIndex < 0 || playerIndex >= jogadores.size()) return out;
+        Jogador dono = jogadores.get(playerIndex);
+        for (int pos = 0; pos < 40; pos++) {
+            Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
+            if (p != null && p.getProprietario() == dono) out.add(pos);
+        }
+        return out;
     }
-    return out;
-}
-
 
     /** Índice do dono da propriedade na 'cell' (ou null se não houver). */
     public Integer getIndiceDonoDaPosicao(int cell) {
@@ -108,13 +104,11 @@ public final class GameFacade {
         if (p == null) return null;
         Jogador dono = p.getProprietario();
         if (dono == null) return null;
-        for (int i = 0; i < jogadores.size(); i++) {
-            if (jogadores.get(i) == dono) return i;
-        }
+        for (int i = 0; i < jogadores.size(); i++) if (jogadores.get(i) == dono) return i;
         return null;
     }
 
-    // ----------- Consultas sobre propriedades (para UI decidir interações) -----------
+    // ----------- Consultas sobre propriedades (decisão de UI) -----------
     public boolean posicaoTemPropriedade(int cell) {
         return tabuleiro.getPropriedadeNaPosicao(norm40(cell)) != null;
     }
@@ -143,9 +137,7 @@ public final class GameFacade {
     public boolean podeConstruirAqui(int playerIndex) {
         Jogador j = jogadores.get(playerIndex);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
-        if (p instanceof Terreno t) {
-            return t.getProprietario() == j && t.podeConstruir();
-        }
+        if (p instanceof Terreno t) return t.getProprietario() == j && t.podeConstruir();
         return false;
     }
 
@@ -156,75 +148,56 @@ public final class GameFacade {
         return 0;
     }
 
-    // ---------- Ações (chamadas pela UI) ----------
-    /** UI pediu rolagem aleatória — usa MotorDeJogo.lancarDados(). */
+    // ---------- Ações (UI) ----------
     public void rolarDadosAleatorio() {
         List<Integer> d = motor.lancarDados();
         processarRolagem(d.get(0), d.get(1));
     }
 
-    /** UI pediu rolagem com valores definidos (modo teste). */
     public void rolarDadosForcado(int d1, int d2) {
         processarRolagem(d1, d2);
     }
 
-    /** Compra a propriedade na posição informada para o jogador. */
     public void comprarPropriedade(int playerIndex, int posicao) {
         Jogador j = jogadores.get(playerIndex);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(norm40(posicao));
         if (p != null) motor.comprarPropriedade(j, p);
-        // HUD será atualizado pelo Controller após a ação.
     }
 
-    /** Compra a propriedade onde o jogador está. */
     public void comprarPropriedadeAtual(int playerIndex) {
         comprarPropriedade(playerIndex, jogadores.get(playerIndex).getPosicao());
     }
 
-    /** Constrói casa (se puder) na propriedade onde o jogador está. */
     public void construirCasaNoLocal(int playerIndex) {
         Jogador j = jogadores.get(playerIndex);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
         if (p != null) motor.construirCasa(j, p);
-        // HUD será atualizado pelo Controller após a ação.
     }
 
-    /** Puxa uma carta de Sorte/Revés e aplica seus efeitos ao jogador. */
     public void puxarSorteReves(int playerIndex) { motor.puxarSorteReves(jogadores.get(playerIndex)); }
-
-    /** Tenta usar carta de saída livre. */
     public boolean usarCartaLiberacao(int playerIndex) { return motor.usarCartaLiberacao(jogadores.get(playerIndex)); }
-
-    /** Verifica falência explicitamente. */
     public boolean verificarFalencia(int playerIndex) { return motor.verificarFalencia(jogadores.get(playerIndex)); }
 
     // ---------- Fluxo interno ----------
     private void processarRolagem(int d1, int d2) {
-        // notifica faces dos dados
         for (GameObserver o : observers) o.onDice(d1, d2);
 
         int jIndex = getIndiceJogadorDaVez();
         Jogador j = jogadores.get(jIndex);
         int from = j.getPosicao();
 
-        // Se estiver preso, regra de saída por dupla é do Motor
         if (j.estaPreso()) {
             boolean liberado = motor.soltarSeDupla(j, Arrays.asList(d1, d2));
-            if (!liberado) { // não sai — turno passa
+            if (!liberado) {
                 avancarVezENotificar();
                 return;
             }
-            // se liberou, segue com o movimento normal
         }
 
-        // Movimento + (prisão, aluguel etc.) ficam NO motor
         motor.moverJogador(j, Arrays.asList(d1, d2));
         int to = j.getPosicao();
 
-        // Notifica UI do deslocamento
         for (GameObserver o : observers) o.onMoved(jIndex, from, to);
-
-        // Avança turno
         avancarVezENotificar();
     }
 
@@ -238,30 +211,37 @@ public final class GameFacade {
 
     // ---------- Cadastro das propriedades (preços/aluguéis) ----------
     private void cadastrarPropriedadesPadrao() {
-        // (seus registros atuais — complete/ajuste conforme seu tabuleiro)
+        // TODO: validar posições reservadas do seu tabuleiro (início, prisão, sorte/revés, vá-para-prisão, etc.)
         tabuleiro.addPropriedade(new Terreno("Leblon",                     100, 50, 10,  1));
         tabuleiro.addPropriedade(new Terreno("Av. Pres. Vargas",           120, 60, 12,  3));
         tabuleiro.addPropriedade(new Terreno("Av. N. S. Copacabana",       140, 70, 14,  4));
         tabuleiro.addPropriedade(new Terreno("Av. Brigadeiro Faria Lima",  160, 80, 16,  6));
-        tabuleiro.addPropriedade(new Propriedade("Companhia 1",            200, 25,     5));
-        tabuleiro.addPropriedade(new Propriedade("Companhia 2",            220, 28,     7));
+
+        // Companhias (regra específica): multiplicador = 1 (mantém aluguelBase original)
+        tabuleiro.addPropriedade(new Companhia("Companhia 1",              200, 1, 25,   5));
+        tabuleiro.addPropriedade(new Companhia("Companhia 2",              220, 1, 28,   7));
+
         tabuleiro.addPropriedade(new Terreno("Av. Rebouças",               180, 90, 18,  8));
-        tabuleiro.addPropriedade(new Terreno("Av. 9 de Julho",             200, 100,20,  9));
-        tabuleiro.addPropriedade(new Terreno("Av. Europa",                 220, 110,22, 11));
-        tabuleiro.addPropriedade(new Terreno("Rua Augusta",                240, 120,24, 13));
-        tabuleiro.addPropriedade(new Terreno("Av. Pacaembú",               260, 130,26, 14));
-        tabuleiro.addPropriedade(new Terreno("Interlagos",                 280, 140,28, 17));
-        tabuleiro.addPropriedade(new Terreno("Morumbi",                    300, 150,30, 19));
-        tabuleiro.addPropriedade(new Terreno("Flamengo",                    300, 150,30, 19));
-        tabuleiro.addPropriedade(new Propriedade("Companhia 3",            240, 30,    15));
-        tabuleiro.addPropriedade(new Propriedade("Companhia 4",            260, 33,    25));
-        tabuleiro.addPropriedade(new Propriedade("Companhia 5",            280, 36,    32));
-        tabuleiro.addPropriedade(new Propriedade("Companhia 6",            300, 40,    35));
-        tabuleiro.addPropriedade(new Terreno("Copacabana",                 320, 160,32, 31));
-        tabuleiro.addPropriedade(new Terreno("Av. Vieira Souto",           340, 170,34, 33));
-        tabuleiro.addPropriedade(new Terreno("Av. Atlântica",              360, 180,36, 34));
-        tabuleiro.addPropriedade(new Terreno("Ipanema",                    380, 190,38, 36));
-        tabuleiro.addPropriedade(new Terreno("Jardim Paulista",            400, 200,40, 38));
-        tabuleiro.addPropriedade(new Terreno("Brooklin",                   420, 210,42, 39));
+        tabuleiro.addPropriedade(new Terreno("Av. 9 de Julho",             200,100, 20,  9));
+        tabuleiro.addPropriedade(new Terreno("Av. Europa",                 220,110, 22, 11));
+        tabuleiro.addPropriedade(new Terreno("Rua Augusta",                240,120, 24, 13));
+        tabuleiro.addPropriedade(new Terreno("Av. Pacaembú",               260,130, 26, 14));
+
+        tabuleiro.addPropriedade(new Terreno("Interlagos",                 280,140, 28, 17)); // TODO: confirmar se 17 não é Sorte/Revés
+
+        tabuleiro.addPropriedade(new Terreno("Morumbi",                    300,150, 30, 19));
+        tabuleiro.addPropriedade(new Terreno("Flamengo",                   300,150, 30, 21)); // **corrigido** (antes 19)
+
+        tabuleiro.addPropriedade(new Companhia("Companhia 3",              240, 1, 30,  15));
+        tabuleiro.addPropriedade(new Companhia("Companhia 4",              260, 1, 33,  25));
+        tabuleiro.addPropriedade(new Companhia("Companhia 5",              280, 1, 36,  32));
+        tabuleiro.addPropriedade(new Companhia("Companhia 6",              300, 1, 40,  35));
+
+        tabuleiro.addPropriedade(new Terreno("Copacabana",                 320,160, 32, 31));
+        tabuleiro.addPropriedade(new Terreno("Av. Vieira Souto",           340,170, 34, 33));
+        tabuleiro.addPropriedade(new Terreno("Av. Atlântica",              360,180, 36, 34));
+        tabuleiro.addPropriedade(new Terreno("Ipanema",                    380,190, 38, 36));
+        tabuleiro.addPropriedade(new Terreno("Jardim Paulista",            400,200, 40, 38));
+        tabuleiro.addPropriedade(new Terreno("Brooklin",                   420,210, 42, 39));
     }
 }

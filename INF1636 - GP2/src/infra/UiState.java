@@ -6,36 +6,44 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Estado visual mantido pela View:
- * - posições dos peões
- * - pista (0..5) para evitar sobreposição
- * - cores e nomes escolhidos na UI
- * - ordem sorteada (índices de jogadores) e apontador do turno
- * - índice do PINO (0..5) por jogador, para desenhar o PNG correspondente
+ * Estado visual mantido pela camada de View/Controller (sem regras de jogo).
+ * <p>Responsabilidades:</p>
+ * <ul>
+ *   <li>Posições dos peões (0..39), “pista” para evitar sobreposição visual, cores/nomes exibidos.</li>
+ *   <li>Ordem sorteada de exibição e ponteiro do turno para destacar o jogador da vez.</li>
+ *   <li>Índice do pino (0..5) mapeado a partir da cor escolhida.</li>
+ * </ul>
+ * <p>Observação: a verdade do jogo vem do Model; este estado serve para refletir/desenhar a UI.</p>
  */
 public class UiState {
 
     private final int numJogadores;
-    private final int[] pos;        // casa 0..39 por jogador (índice do jogador)
-    private final int[] pista;      // 0..5 por jogador
-    private final Color[] cores;    // cor por jogador (decisão da UI)
-    private final String[] nomes;   // nome por jogador (decisão da UI)
-    private final int[] pinoIndex;  // 0..5 por jogador (pin0..pin5)
+    private final int[] pos;        // casa 0..39 por jogador
+    private final int[] pista;      // 0..5 por jogador (offset visual)
+    private final Color[] cores;    // cor exibida
+    private final String[] nomes;   // nome exibido
+    private final int[] pinoIndex;  // 0..5 (seleção de sprite)
 
-    /** Ordem sorteada: lista de índices de jogadores. Ex.: [2,0,1] */
+    /** Ordem sorteada de jogadores (ex.: [2,0,1]). */
     private final List<Integer> ordem;
 
-    /** Posição atual do ponteiro de turno dentro da ordem (0..n-1). */
+    /** Posição atual do ponteiro de turno dentro de {@link #ordem}. */
     private int turnoIndex = 0;
 
-    // Paleta oficial de pinos (para PlayerSetupDialog usar a mesma)
+    /** Paleta fixa de pinos (UI e sprites devem estar alinhados a esta paleta). */
     public static final Color[] PIN_PALETTE = new Color[] {
             Color.RED, Color.BLUE, Color.ORANGE, Color.YELLOW, Color.PINK, Color.GRAY
     };
 
     // ================== CONSTRUTORES ==================
 
-    /** Construtor completo com nomes/cores/ordem. */
+    /**
+     * Construtor completo.
+     * @param numJogadores 3..6
+     * @param cores cores preferidas (pode conter nulos; usa padrão se faltar)
+     * @param nomes nomes preferidos (pode conter nulos/vazios; usa "J1..Jn")
+     * @param ordemSorteada vetor com os índices (0..n-1) ou {@code null} para embaralhar
+     */
     public UiState(int numJogadores, Color[] cores, String[] nomes, int[] ordemSorteada) {
         if (numJogadores < 3 || numJogadores > 6) {
             throw new IllegalArgumentException("numJogadores deve ser 3..6");
@@ -51,7 +59,7 @@ public class UiState {
 
         for (int i = 0; i < numJogadores; i++) {
             pos[i] = 0;
-            pista[i] = i; // espalha os primeiros peões em pistas diferentes
+            pista[i] = i; // distribui visualmente os peões de saída
 
             Color cor = (cores != null && i < cores.length && cores[i] != null)
                     ? cores[i] : defaults[i];
@@ -60,7 +68,7 @@ public class UiState {
             this.nomes[i] = (nomes != null && i < nomes.length && nomes[i] != null && !nomes[i].isBlank())
                     ? nomes[i] : ("J" + (i+1));
 
-            this.pinoIndex[i] = mapColorToPinIndex(cor); // 0..5 (pin0..pin5)
+            this.pinoIndex[i] = mapColorToPinIndex(cor);
         }
 
         this.ordem = new ArrayList<>();
@@ -79,9 +87,9 @@ public class UiState {
     // ================== HELPERS ==================
 
     private static Color[] defaultColors(int n) {
-        Color[] base = PIN_PALETTE; // usa exatamente: Red, Blue, Orange, Yellow, Pink, Gray
+        Color[] base = PIN_PALETTE;
         Color[] out = new Color[n];
-        System.arraycopy(base, 0, out, 0, n);
+        System.arraycopy(base, 0, out, 0, n); // n <= 6 garantido pela validação
         return out;
     }
 
@@ -92,15 +100,11 @@ public class UiState {
     /** Mapeia cor -> índice de pino (0..5). Tolerante a variações próximas. */
     private static int mapColorToPinIndex(Color c) {
         if (c == null) return 0;
-        // Igualdade direta com a paleta oficial
-        for (int i = 0; i < PIN_PALETTE.length; i++) {
-            if (c.equals(PIN_PALETTE[i])) return i;
-        }
-        // Aproximações por faixa
+        for (int i = 0; i < PIN_PALETTE.length; i++) if (c.equals(PIN_PALETTE[i])) return i;
         int r = c.getRed(), g = c.getGreen(), b = c.getBlue();
-        if (r > 200 && g < 80  && b < 80)  return 0; // Red
-        if (r < 80  && g < 170 && b > 160) return 1; // Blue
-        if (r > 230 && g > 130 && b < 60)  return 2; // Orange
+        if (r > 200 && g <  80 && b <  80) return 0; // Red
+        if (r <  80 && g < 170 && b > 160) return 1; // Blue
+        if (r > 230 && g > 130 && b <  60) return 2; // Orange
         if (r > 220 && g > 220 && b < 120) return 3; // Yellow
         if (r > 230 && g < 160 && b > 200) return 4; // Pink
         if (Math.abs(r-g) < 15 && Math.abs(g-b) < 15 && r > 90 && r < 180) return 5; // Gray
@@ -109,13 +113,13 @@ public class UiState {
 
     // ================== MÉTODOS USADOS PELA VIEW ==================
 
-    /** Índice do jogador da vez (no domínio dos jogadores, não na posição da lista). */
+    /** Índice do jogador da vez (no domínio 0..n-1). */
     public int jogadorAtual() { return ordem.get(turnoIndex); }
 
-    /** Avança o ponteiro de turno (uso eventual em protótipos; o oficial vem do Model). */
+    /** Avança o ponteiro de turno (uso local de protótipo; o oficial vem do Model). */
     public void proximoTurno() { turnoIndex = (turnoIndex + 1) % numJogadores; }
 
-    /** Movimento local (útil para mock/testes da UI). O oficial vem do Model. */
+    /** Movimento local para protótipo/teste visual (o oficial vem do Model). */
     public void moverJogadorAtual(int passos) {
         int j = jogadorAtual();
         pos[j] = norm40(pos[j] + passos);
@@ -130,18 +134,9 @@ public class UiState {
     }
 
     /**
-     * Ajusta o "jogador da vez" para refletir o turno vindo do Model.
-     * Recebe o índice do jogador (no domínio 0..n-1) e move o ponteiro de ordem
-     * para a posição onde esse jogador aparece.
+     * Ajusta o "jogador da vez" refletindo o turno vindo do Model.
+     * @param jogadorIndex índice do jogador (0..n-1)
      */
-    public void setJogadorAtualByIndiceJogador(int jogadorIndex) {
-        for (int k = 0; k < ordem.size(); k++) {
-            if (ordem.get(k) == jogadorIndex) {
-                turnoIndex = k;
-                return;
-            }
-        }
-    }
     public void setJogadorDaVez(int jogadorIndex) {
         for (int i = 0; i < ordem.size(); i++) {
             if (ordem.get(i) == jogadorIndex) { turnoIndex = i; break; }
@@ -150,13 +145,13 @@ public class UiState {
 
     // ================== GETTERS PARA A VIEW DESENHAR ==================
 
-    public int getPos(int jogador)        { return pos[jogador]; }
-    public int getPista(int jogador)      { return pista[jogador]; }
-    public Color getCor(int jogador)      { return cores[jogador]; }
-    public String getNome(int jogador)    { return nomes[jogador]; }
-    public String getNomeAtual()          { return nomes[jogadorAtual()]; }
-    public int getPinoIndex(int jogador)  { return pinoIndex[jogador]; }
+    public int getPos(int jogador)       { return pos[jogador]; }
+    public int getPista(int jogador)     { return pista[jogador]; }
+    public Color getCor(int jogador)     { return cores[jogador]; }
+    public String getNome(int jogador)   { return nomes[jogador]; }
+    public String getNomeAtual()         { return nomes[jogadorAtual()]; }
+    public int getPinoIndex(int jogador) { return pinoIndex[jogador]; }
 
-    public int getNumJogadores()          { return numJogadores; }
-    public List<Integer> getOrdem()       { return Collections.unmodifiableList(ordem); }
+    public int getNumJogadores()         { return numJogadores; }
+    public List<Integer> getOrdem()      { return Collections.unmodifiableList(ordem); }
 }
