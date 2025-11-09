@@ -204,6 +204,12 @@ public final class GameFacade {
     }
 
     // ---------- Fluxo interno ----------
+    
+    // ---------- Consultas auxiliares para HUD ----------
+    public int getNumeroJogadores() {
+        return jogadores.size();
+    }
+
     private void processarRolagem(int d1, int d2) {
         for (GameObserver o : observadores) o.onDice(d1, d2);
 
