@@ -271,8 +271,25 @@ public class UIController implements GameObserver {
 
     private void refreshHud(int indiceJogador) {
         if (hud == null) return;
+
+        // HUD do jogador da vez (como já era)
         int saldo = game.getSaldo(indiceJogador);
         List<String> props = game.getPropriedadesDoJogador(indiceJogador);
         hud.updateHud(ui.getNome(indiceJogador), ui.getCor(indiceJogador), saldo, props);
+
+        // NOVO: linha com os saldos de todos os jogadores
+        StringBuilder sb = new StringBuilder("Saldos: ");
+        int n = game.getNumeroJogadores(); // novo método no GameFacade
+
+        boolean first = true;
+        for (int i = 0; i < n; i++) {
+            // se quiser ignorar falidos, dá pra checar aqui
+            if (!first) sb.append("  |  ");
+            sb.append(ui.getNome(i))
+              .append(": R$ ")
+              .append(game.getSaldo(i));
+            first = false;
+        }
+        hud.updateAllBalances(sb.toString());
     }
 }
