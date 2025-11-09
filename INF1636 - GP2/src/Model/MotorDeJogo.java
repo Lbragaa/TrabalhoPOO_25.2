@@ -40,7 +40,7 @@ public class MotorDeJogo {
         if (jogador == null || dados == null || dados.isEmpty()) return;
 
         if (jogador.estaPreso()) {
-            // log opcional; em GUI, evitar prints
+            // em GUI evitamos prints/logs
             return;
         }
 
@@ -51,8 +51,8 @@ public class MotorDeJogo {
         verificarPrisao(jogador);
         if (jogador.estaPreso()) return;
 
-        Propriedade prop = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
-        if (prop != null) pagarAluguel(jogador, prop);
+        Propriedade propriedade = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
+        if (propriedade != null) pagarAluguel(jogador, propriedade);
     }
 
     /** Compra propriedade sem dono. */
@@ -76,7 +76,11 @@ public class MotorDeJogo {
         }
     }
 
-    /** Cobrança de aluguel (terreno só cobra se tem ≥1 casa; demais cobram base/implementação própria). */
+    /**
+     * Cobrança de aluguel (regra existente):
+     * - Terreno só cobra se tiver ≥ 1 casa;
+     * - Demais propriedades usam sua própria implementação de cálculo.
+     */
     public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
         if (jogador == null || propriedade == null) return;
 
@@ -92,7 +96,7 @@ public class MotorDeJogo {
 
         boolean pagou = jogador.getConta().paga(dono.getConta(), valorAPagar);
         if (!pagou) {
-            // Sinaliza falência sem forçar saldo negativo
+            // sinalizamos falência sem forçar saldo negativo
             jogador.setFalido(true);
             verificarFalencia(jogador);
         }
@@ -111,15 +115,23 @@ public class MotorDeJogo {
         return false;
     }
 
-    /** Puxa carta e aplica. */
-    public void puxarSorteReves(Jogador j) {
+    /** Puxa carta, aplica o efeito e retorna a carta sorteada. */
+    public Carta puxarSorteReves(Jogador j) {
         Carta c = tabuleiro.comprarCartaSorteReves();
         switch (c.tipo) {
             case VAI_PARA_PRISAO -> j.prende();
             case SAIDA_LIVRE     -> j.adicionarCartaLiberacao();
             case PAGAR           -> { j.getConta().paga(banco.getConta(), c.valor); verificarFalencia(j); }
             case RECEBER         -> banco.getConta().paga(j.getConta(), c.valor);
+            case RECEBER_DE_CADA -> {
+                for (Jogador outro : tabuleiro.getJogadoresAtivos()) {
+                    if (outro == j) continue;
+                    boolean ok = outro.getConta().paga(j.getConta(), c.valor);
+                    if (!ok) { outro.setFalido(true); verificarFalencia(outro); }
+                }
+            }
         }
+        return c;
     }
 
     /** Usa carta de saída livre, devolvendo-a ao fim do baralho. */

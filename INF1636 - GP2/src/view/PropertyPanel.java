@@ -34,6 +34,17 @@ public class PropertyPanel extends JPanel {
         repaint();
     }
 
+    /** Exibe explicitamente a carta de Sorte/Revés sorteada (chance{cardNumber}.png). */
+    public void showChanceCard(int cardNumber, String title, String detail) {
+        this.ownerColor = null;
+        this.title  = (title  != null ? title  : "Sorte/Revés");
+        this.detail = (detail != null ? detail : "—");
+        String path = "/sorteReves/chance" + Math.max(1, Math.min(30, cardNumber)) + ".png";
+        this.img = ImageStore.loadCached(path);
+        revalidate();
+        repaint();
+    }
+
     @Override protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
