@@ -76,6 +76,20 @@ class Tabuleiro {
     /** Baralho real: chance1.png .. chance30.png mapeados para tipo/valor. */
     public void inicializarBaralhoSorteRevesDefault() {
         baralhoSorteReves.clear();
+        
+        // Eh so ficar trocando essa ordem aqui pra gnt poder testar cada carta do sorte/reves
+        
+        baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE,      0,  9));
+        
+     // PAGAR
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 24));
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 25));
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           25, 26));
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 27));
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           45, 28));
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 29));
+        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 30));
+        
         // RECEBER
         baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         25,  1));
         baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        150,  2));
@@ -86,7 +100,7 @@ class Tabuleiro {
         baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        100,  7));
         baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        100,  8));
         // SAIDA_LIVRE
-        baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE,      0,  9));
+        
         // RECEBER
         baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        200, 10));
         // RECEBER_DE_CADA
@@ -106,14 +120,7 @@ class Tabuleiro {
         baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           40, 22));
         // VAI PARA PRISÃO
         baralhoSorteReves.offer(new Carta(TipoCarta.VAI_PARA_PRISAO,  0, 23));
-        // PAGAR
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 24));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 25));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           25, 26));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 27));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           45, 28));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 29));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 30));
+        
     }
 
     /** Compra uma carta. SAÍDA_LIVRE não retorna ao baralho agora. */

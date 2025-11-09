@@ -51,8 +51,9 @@ public class MotorDeJogo {
         verificarPrisao(jogador);
         if (jogador.estaPreso()) return;
 
-        Propriedade propriedade = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
-        if (propriedade != null) pagarAluguel(jogador, propriedade);
+        // Isso aqui tava fazendo pagar duas vezes, ja que no game facade tambem tinha uma outra cobranca.
+//        Propriedade propriedade = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
+//        if (propriedade != null) pagarAluguel(jogador, propriedade);
     }
 
     /** Compra propriedade sem dono. */
