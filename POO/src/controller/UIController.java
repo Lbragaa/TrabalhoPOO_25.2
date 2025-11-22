@@ -46,38 +46,33 @@ public class UIController implements GameObserver {
     }
 
     private void showOwnedPropertiesDialog() {
-        // 1) Pegamos o estado atual para restaurar depois SEM pré-visualização de sorte/revés.
         int indiceJogador = game.getIndiceJogadorDaVez();
         int celulaAtual = game.getPosicao(indiceJogador);
 
-        // 2) Recuperamos nomes e células das propriedades do jogador.
         List<String> nomes = game.getPropriedadesDoJogador(indiceJogador);
         List<Integer> celulas = game.getCelulasPropriedadesDoJogador(indiceJogador);
 
         if (nomes.isEmpty()) {
             JOptionPane.showMessageDialog(board, "Este jogador não possui propriedades.",
                     "Propriedades", JOptionPane.INFORMATION_MESSAGE);
-            // Restauramos a carta/casa atual sem “prévia” de sorte/revés para não confundir (nem parecer sorteio).
             restoreCurrentCellCard(indiceJogador, celulaAtual, /*preverSorteReves=*/false);
             return;
         }
 
-        // 3) Montamos a lista “Nome (casas: N)”.
-        //    Fazemos isso via GameFacade para manter o Controller desacoplado do domínio.
+        // Agora mostramos casas e hotéis.
         List<String> exibicao = new ArrayList<>(nomes.size());
         for (int i = 0; i < nomes.size(); i++) {
             int cel = celulas.get(i);
-            int casas = game.getNumeroCasasNaPosicao(cel); // 0 para não-Terreno
-            exibicao.add(nomes.get(i) + " (casas: " + casas + ")");
+            int casas = game.getNumeroCasasNaPosicao(cel);   // 0 se não for Terreno
+            int hoteis = game.getNumeroHoteisNaPosicao(cel); // 0 ou 1
+            exibicao.add(nomes.get(i) + " (casas: " + casas + ", hoteis: " + hoteis + ")");
         }
 
-        // 4) Lista de seleção com scroll.
         JList<String> list = new JList<>(exibicao.toArray(new String[0]));
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane sp = new JScrollPane(list);
         sp.setPreferredSize(new Dimension(360, 220));
 
-        // 5) Ao selecionar, mostramos a propriedade escolhida (somente preview, sem efeitos colaterais).
         list.addListSelectionListener(ev -> {
             if (!ev.getValueIsAdjusting()) {
                 int sel = list.getSelectedIndex();
@@ -98,15 +93,9 @@ public class UIController implements GameObserver {
                 "Propriedades de " + ui.getNome(indiceJogador),
                 JOptionPane.PLAIN_MESSAGE);
 
-        // 6) Ao fechar o diálogo, restauramos a carta/casa atual SEM pré-visualização de sorte/revés.
         restoreCurrentCellCard(indiceJogador, celulaAtual, /*preverSorteReves=*/false);
     }
 
-    /**
-     * Restauramos a carta/casa atual do jogador.
-     * - Se preverSorteReves=true e a célula for de sorte/revés, mostramos um preview textual (NÃO sorteamos carta).
-     * - Se preverSorteReves=false, nunca mostramos “preview de sorte/revés” (para não confundir após pop-ups).
-     */
     private void restoreCurrentCellCard(int indiceJogador, int celula, boolean preverSorteReves) {
         boolean eSorteReves = CardResolver.isChanceCell(celula);
         boolean mostrarChance = (preverSorteReves && eSorteReves);
@@ -117,7 +106,6 @@ public class UIController implements GameObserver {
         String titulo  = mostrarChance ? "Sorte/Revés" : ("Casa " + celula);
         String donoTxt = (!mostrarChance ? " \nProprietário: " + (indiceDono != null ? ui.getNome(indiceDono) : "sem dono") : "");
 
-        // Mensagem didática: quando estivermos apenas “prevendo”, deixamos explícito que não sorteamos.
         String detalhe = mostrarChance
                 ? "Casa de Sorte/Revés — pré-visualização (não sorteamos carta agora)."
                 : ui.getNome(indiceJogador) + " está na casa " + celula + "." + donoTxt;
@@ -136,7 +124,6 @@ public class UIController implements GameObserver {
     @Override public void onMoved(int indiceJogador, int celulaOrigem, int celulaDestino) {
         ui.setPos(indiceJogador, celulaDestino);
 
-        // Evita "prévia aleatória" quando a casa já é de sorte/revés
         boolean eSorteReves = CardResolver.isChanceCell(celulaDestino);
         restoreCurrentCellCard(indiceJogador, celulaDestino, /*preverSorteReves=*/!eSorteReves);
 
@@ -151,7 +138,6 @@ public class UIController implements GameObserver {
             );
         }
 
-        // Decisões (comprar/construir) seguem iguais; UI NÃO atualiza saldos aqui.
         if (game.posicaoTemPropriedade(celulaDestino)) {
             if (game.propriedadeDisponivel(celulaDestino)) {
                 String nomeProp = game.getNomePropriedade(celulaDestino);
@@ -163,10 +149,18 @@ public class UIController implements GameObserver {
                     game.comprarPropriedadeAtual(indiceJogador);
                 }
             } else if (game.jogadorEhDonoDaPosicao(indiceJogador, celulaDestino) && game.podeConstruirAqui(indiceJogador)) {
-                int valorCasa = game.getValorCasaAqui(indiceJogador);
+
+                boolean construirHotel = game.proximaConstrucaoEhHotelAqui(indiceJogador);
+                int valor = construirHotel
+                        ? game.getValorHotelAqui(indiceJogador)
+                        : game.getValorCasaAqui(indiceJogador);
+
+                String tipo = construirHotel ? "hotel" : "casa";
+                String titulo = construirHotel ? "Construir hotel" : "Construir casa";
+
                 int opt = JOptionPane.showConfirmDialog(board,
-                        "Construir casa por R$ " + valorCasa + " nesta propriedade?",
-                        "Construir casa", JOptionPane.YES_NO_OPTION);
+                        "Construir " + tipo + " por R$ " + valor + " nesta propriedade?",
+                        titulo, JOptionPane.YES_NO_OPTION);
                 if (opt == JOptionPane.YES_OPTION) {
                     game.construirCasaNoLocal(indiceJogador);
                 }
@@ -203,8 +197,17 @@ public class UIController implements GameObserver {
     @Override public void onHouseBuilt(int indiceJogador, int celula, int numeroCasas) {
         Integer indiceDono = game.getIndiceDonoDaPosicao(celula);
         Color corDono = (indiceDono != null ? ui.getCor(indiceDono) : null);
+
+        int hoteis = game.getNumeroHoteisNaPosicao(celula);
         String titulo  = "Construção";
-        String detalhe = ui.getNome(indiceJogador) + " construiu casa (#" + numeroCasas + ") na casa " + celula + ".";
+        String detalhe;
+
+        if (hoteis > 0) {
+            detalhe = ui.getNome(indiceJogador) + " construiu um hotel na casa " + celula + ".";
+        } else {
+            detalhe = ui.getNome(indiceJogador) + " construiu casa (#" + numeroCasas + ") na casa " + celula + ".";
+        }
+
         property.showForCell(celula, false, corDono, titulo, detalhe);
 
         int atual = game.getIndiceJogadorDaVez();
@@ -225,7 +228,6 @@ public class UIController implements GameObserver {
             ui.setPos(indiceJogador, 10);
         } else {
             int celula = game.getPosicao(indiceJogador);
-            // Ao sair da prisão, é seguro mostrar a prévia normal.
             restoreCurrentCellCard(indiceJogador, celula, /*preverSorteReves=*/true);
         }
         int atual = game.getIndiceJogadorDaVez();
@@ -233,7 +235,6 @@ public class UIController implements GameObserver {
         board.repaint();
     }
 
-    /** Feedback visual do pagamento de aluguel (HUDs atualizam via onBalanceChanged). */
     @Override public void onRentPaid(int indicePagador, int indiceDono, int celula, int valor) {
         Color corDono = ui.getCor(indiceDono);
         String titulo = "Aluguel pago";
@@ -252,7 +253,6 @@ public class UIController implements GameObserver {
         board.repaint();
     }
 
-    /** NOVO: exibe a imagem exata da carta sorteada (chance{n}.png). */
     @Override
     public void onChanceCard(int indiceJogador, int celula, int numero, String tipo, int valor) {
         String detalhe;
@@ -272,18 +272,15 @@ public class UIController implements GameObserver {
     private void refreshHud(int indiceJogador) {
         if (hud == null) return;
 
-        // HUD do jogador da vez (como já era)
         int saldo = game.getSaldo(indiceJogador);
         List<String> props = game.getPropriedadesDoJogador(indiceJogador);
         hud.updateHud(ui.getNome(indiceJogador), ui.getCor(indiceJogador), saldo, props);
 
-        // NOVO: linha com os saldos de todos os jogadores
         StringBuilder sb = new StringBuilder("Saldos: ");
-        int n = game.getNumeroJogadores(); // novo método no GameFacade
+        int n = game.getNumeroJogadores();
 
         boolean first = true;
         for (int i = 0; i < n; i++) {
-            // se quiser ignorar falidos, dá pra checar aqui
             if (!first) sb.append("  |  ");
             sb.append(ui.getNome(i))
               .append(": R$ ")

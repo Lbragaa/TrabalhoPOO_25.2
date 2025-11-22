@@ -135,31 +135,51 @@ public final class GameFacade implements GameSubject {
         if (p == null) return false;
         return p.getProprietario() == jogadores.get(indiceJogador);
     }
+
     public boolean podeConstruirAqui(int indiceJogador) {
         Jogador j = jogadores.get(indiceJogador);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
         if (p instanceof Terreno t) return t.getProprietario() == j && t.podeConstruir();
         return false;
     }
-    
+
     public int getValorCasaAqui(int indiceJogador) {
-    Jogador j = jogadores.get(indiceJogador);
-    Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
-
-    if (p instanceof Terreno t && t.podeConstruir()) {
-        return (t.getNumCasas() < 4)
-                ? t.getValorCasa()
-                : t.getValorHotel();
-    }
-    return 0;
+        Jogador j = jogadores.get(indiceJogador);
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
+        if (p instanceof Terreno t) return t.getValorCasa();
+        return 0;
     }
 
+    /** NOVO: valor do hotel na posição atual do jogador. */
+    public int getValorHotelAqui(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
+        if (p instanceof Terreno t) return t.getValorHotel();
+        return 0;
+    }
 
     /** NOVO: expomos a quantidade de casas em uma célula (0 se não for Terreno). */
     public int getNumeroCasasNaPosicao(int celula) {
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(norm40(celula));
         if (p instanceof Terreno t) return t.getNumCasas();
         return 0;
+    }
+
+    /** NOVO: 0 ou 1 hotel na posição (apenas Terreno). */
+    public int getNumeroHoteisNaPosicao(int celula) {
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(norm40(celula));
+        if (p instanceof Terreno t) return t.temHotel() ? 1 : 0;
+        return 0;
+    }
+
+    /** NOVO: indica se a próxima construção nesta posição será hotel (4 casas e ainda sem hotel). */
+    public boolean proximaConstrucaoEhHotelAqui(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
+        if (p instanceof Terreno t) {
+            return t.getProprietario() == j && t.getNumCasas() == 4 && !t.temHotel();
+        }
+        return false;
     }
 
     // ---------- Ações ----------
@@ -190,12 +210,24 @@ public final class GameFacade implements GameSubject {
         Jogador j = jogadores.get(indiceJogador);
         int celula = j.getPosicao();
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(celula);
-        int casasAntes = (p instanceof Terreno t ? t.getNumCasas() : -1);
+
+        int casasAntes = -1;
+        boolean tinhaHotelAntes = false;
+        if (p instanceof Terreno t) {
+            casasAntes = t.getNumCasas();
+            tinhaHotelAntes = t.temHotel();
+        }
 
         motor.construirCasa(j, p);
 
-        int casasDepois = (p instanceof Terreno t ? t.getNumCasas() : -1);
-        if (p instanceof Terreno && casasDepois > casasAntes) {
+        int casasDepois = -1;
+        boolean temHotelDepois = false;
+        if (p instanceof Terreno t) {
+            casasDepois = t.getNumCasas();
+            temHotelDepois = t.temHotel();
+        }
+
+        if (p instanceof Terreno && (casasDepois > casasAntes || (!tinhaHotelAntes && temHotelDepois))) {
             notificarCasaConstruida(indiceJogador, celula, casasDepois);
         }
         detectarENotificarEstadoGlobal();
@@ -218,7 +250,7 @@ public final class GameFacade implements GameSubject {
     }
 
     // ---------- Fluxo interno ----------
-    
+
     // ---------- Consultas auxiliares para HUD ----------
     public int getNumeroJogadores() {
         return jogadores.size();
