@@ -67,38 +67,27 @@ public class MotorDeJogo {
 
     /** Constrói casa no terreno onde o jogador está (se puder e pagar). */
     /** Constrói casa ou hotel no terreno onde o jogador está (se puder e pagar). */
+    /** Builds a house or hotel (depending on state) on the property where the player is. */
     public void construirCasa(Jogador jogador, Propriedade propriedade) {
-        if (jogador == null || propriedade == null) return;
-
         Propriedade atual = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
-        if (propriedade != atual) return; // só constrói na casa onde está
+        if (propriedade != atual) return;
 
-        if (!(propriedade instanceof Terreno terreno)) return;
-        if (terreno.getProprietario() != jogador) return;   // só o dono constrói
-        if (!terreno.podeConstruir()) return;               // já tem hotel, não constrói mais
+        if (propriedade instanceof Terreno terreno) {
+            if (terreno.getProprietario() != jogador || !terreno.podeConstruir()) return;
 
-        int numCasasAntes = terreno.getNumCasas();
-        int custo;
+            int custo = (terreno.getNumCasas() < 4)
+                    ? terreno.getValorCasa()   // building a house
+                    : terreno.getValorHotel(); // building the hotel
 
-        if (numCasasAntes >= 0 && numCasasAntes <= 3) {
-            // construção de casa normal
-            custo = terreno.getValorCasa();
-        } else if (numCasasAntes == 4) {
-            // próxima construção vira hotel
-            custo = terreno.getValorHotel();
-        } else {
-            // estado inesperado; por segurança, não faz nada
-            return;
+            boolean pagou = jogador.getConta().paga(banco.getConta(), custo);
+            if (pagou) {
+                terreno.adicionaCasa();
+            } else {
+                verificarFalencia(jogador);
+            }
         }
-
-        boolean pagou = jogador.getConta().paga(banco.getConta(), custo);
-        if (!pagou) {
-            verificarFalencia(jogador);
-            return;
-        }
-
-        terreno.adicionaCasa(); // aqui ele incrementa e, se estava em 4, vira hotel
     }
+
 
     /**
      * Cobrança de aluguel (regra existente):

@@ -141,12 +141,19 @@ public final class GameFacade implements GameSubject {
         if (p instanceof Terreno t) return t.getProprietario() == j && t.podeConstruir();
         return false;
     }
+    
     public int getValorCasaAqui(int indiceJogador) {
-        Jogador j = jogadores.get(indiceJogador);
-        Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
-        if (p instanceof Terreno t) return t.getValorCasa();
-        return 0;
+    Jogador j = jogadores.get(indiceJogador);
+    Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
+
+    if (p instanceof Terreno t && t.podeConstruir()) {
+        return (t.getNumCasas() < 4)
+                ? t.getValorCasa()
+                : t.getValorHotel();
     }
+    return 0;
+    }
+
 
     /** NOVO: expomos a quantidade de casas em uma célula (0 se não for Terreno). */
     public int getNumeroCasasNaPosicao(int celula) {
