@@ -1,37 +1,56 @@
 package Model;
 
 /**
- * Terreno construível (até 4 casas nesta iteração).
- * <p>Regra de aluguel: com ≥1 casa, cresce em função do nº de casas; sem casa, usa aluguel base.
- * O Motor só cobra terreno com ≥1 casa, então este retorno base é redundante porém inofensivo.</p>
+ * Terreno construível (até 4 casas, passando então para hotel).
  */
 class Terreno extends Propriedade {
 
-    protected int numCasas;
-    protected int valorCasa;
+    private int numCasas;
+    private boolean temHotel;
 
     public Terreno(String nome, int preco, int valorCasa, int aluguelBase, int posicao) {
         super(nome, preco, aluguelBase, posicao);
-        this.valorCasa = valorCasa;
         this.numCasas = 0;
+        this.temHotel = false;
     }
 
     // --------- CONSTRUÇÃO ---------
-    /** Pode construir até 4 casas (sem hotel nesta iteração). */
-    public boolean podeConstruir() { return numCasas < 4; }
 
-    /** Incrementa 1 casa se permitido. */
-    public void adicionaCasa() { if (podeConstruir()) numCasas++; }
+    /** Pode construir enquanto ainda não houver hotel (máx. 4 casas + 1 hotel). */
+    public boolean podeConstruir() {
+        return !temHotel && numCasas <= 4;
+    }
 
-    public int getNumCasas() { return numCasas; }
+    /** Adiciona construção: até 4 casas; após isso, vira hotel sem zerar casas. */
+    public void adicionaCasa() {
+        if (!podeConstruir()) return;
 
-    // --------- ALUGUEL ---------
+        if (numCasas < 4) {
+            // constrói mais uma casa
+            numCasas++;
+        } else if (numCasas == 4) {
+            // já tem 4 casas, agora adiciona hotel (continua com 4 casas)
+            temHotel = true;
+        }
+    }
+
+    public int getNumCasas()   { return numCasas; }
+    public boolean temHotel()  { return temHotel; }
+
+    // --------- ALUGUEL (segundo regra do professor) ---------
+
     @Override
     public int calculaAluguel() {
-        if (numCasas == 0) return aluguelBase;
-        return aluguelBase * numCasas;
+        double preco = this.preco;
+
+        double Vb = preco * 0.10; // 10%
+        double Vc = preco * 0.15; // 15% por casa
+        double Vh = temHotel ? preco * 0.30 : 0; // 30% se tiver hotel
+
+        return (int)(Vb + Vc * numCasas + Vh);
     }
 
     // --------- GETTERS ---------
-    public int getValorCasa() { return valorCasa; }
+    public int getValorCasa() { return (int)(preco * 0.50); } // casa custa 50% do preço
+    public int getValorHotel() { return preco; } // hotel custa 100% do preço
 }

@@ -66,15 +66,38 @@ public class MotorDeJogo {
     }
 
     /** Constrói casa no terreno onde o jogador está (se puder e pagar). */
+    /** Constrói casa ou hotel no terreno onde o jogador está (se puder e pagar). */
     public void construirCasa(Jogador jogador, Propriedade propriedade) {
+        if (jogador == null || propriedade == null) return;
+
         Propriedade atual = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
-        if (propriedade != atual) return;
-        if (propriedade instanceof Terreno terreno) {
-            if (terreno.getProprietario() == jogador && terreno.podeConstruir()) {
-                boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getValorCasa());
-                if (pagou) terreno.adicionaCasa(); else verificarFalencia(jogador);
-            }
+        if (propriedade != atual) return; // só constrói na casa onde está
+
+        if (!(propriedade instanceof Terreno terreno)) return;
+        if (terreno.getProprietario() != jogador) return;   // só o dono constrói
+        if (!terreno.podeConstruir()) return;               // já tem hotel, não constrói mais
+
+        int numCasasAntes = terreno.getNumCasas();
+        int custo;
+
+        if (numCasasAntes >= 0 && numCasasAntes <= 3) {
+            // construção de casa normal
+            custo = terreno.getValorCasa();
+        } else if (numCasasAntes == 4) {
+            // próxima construção vira hotel
+            custo = terreno.getValorHotel();
+        } else {
+            // estado inesperado; por segurança, não faz nada
+            return;
         }
+
+        boolean pagou = jogador.getConta().paga(banco.getConta(), custo);
+        if (!pagou) {
+            verificarFalencia(jogador);
+            return;
+        }
+
+        terreno.adicionaCasa(); // aqui ele incrementa e, se estava em 4, vira hotel
     }
 
     /**
@@ -90,7 +113,7 @@ public class MotorDeJogo {
 
         int valorAPagar = 0;
         if (propriedade instanceof Terreno terreno) {
-            if (terreno.getNumCasas() >= 1) valorAPagar = terreno.calculaAluguel(); else return;
+            if (terreno.getNumCasas() >= 1 || terreno.temHotel()) valorAPagar = terreno.calculaAluguel(); else return;
         } else {
             valorAPagar = propriedade.calculaAluguel();
         }

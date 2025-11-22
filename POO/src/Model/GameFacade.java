@@ -285,31 +285,37 @@ public final class GameFacade implements GameSubject {
 
     // ---------- Cadastro das propriedades ----------
     private void cadastrarPropriedadesPadrao() {
+
         tabuleiro.addPropriedade(new Terreno("Leblon",                     100, 50, 10,  1));
-        tabuleiro.addPropriedade(new Terreno("Av. Pres. Vargas",           120, 60, 12,  3));
-        tabuleiro.addPropriedade(new Terreno("Av. N. S. Copacabana",       140, 70, 14,  4));
-        tabuleiro.addPropriedade(new Terreno("Av. Brigadeiro Faria Lima",  160, 80, 16,  6));
-        tabuleiro.addPropriedade(new Companhia("Companhia 1",              200, 1, 25,   5));
-        tabuleiro.addPropriedade(new Companhia("Companhia 2",              220, 1, 28,   7));
-        tabuleiro.addPropriedade(new Terreno("Av. Rebouças",               180, 90, 18,  8));
-        tabuleiro.addPropriedade(new Terreno("Av. 9 de Julho",             200,100, 20,  9));
-        tabuleiro.addPropriedade(new Terreno("Av. Europa",                 220,110, 22, 11));
-        tabuleiro.addPropriedade(new Terreno("Rua Augusta",                240,120, 24, 13));
-        tabuleiro.addPropriedade(new Terreno("Av. Pacaembú",               260,130, 26, 14));
-        tabuleiro.addPropriedade(new Terreno("Interlagos",                 280,140, 28, 17));
-        tabuleiro.addPropriedade(new Terreno("Morumbi",                    300,150, 30, 19));
-        tabuleiro.addPropriedade(new Terreno("Flamengo",                   300,150, 30, 21));
-        tabuleiro.addPropriedade(new Companhia("Companhia 3",              240, 1, 30,  15));
-        tabuleiro.addPropriedade(new Companhia("Companhia 4",              260, 1, 33,  25));
-        tabuleiro.addPropriedade(new Companhia("Companhia 5",              280, 1, 36,  32));
-        tabuleiro.addPropriedade(new Companhia("Companhia 6",              300, 1, 40,  35));
-        tabuleiro.addPropriedade(new Terreno("Copacabana",                 320,160, 32, 31));
-        tabuleiro.addPropriedade(new Terreno("Av. Vieira Souto",           340,170, 34, 33));
-        tabuleiro.addPropriedade(new Terreno("Av. Atlântica",              360,180, 36, 34));
-        tabuleiro.addPropriedade(new Terreno("Ipanema",                    380,190, 38, 36));
-        tabuleiro.addPropriedade(new Terreno("Jardim Paulista",            400,200, 40, 38));
-        tabuleiro.addPropriedade(new Terreno("Brooklin",                   420,210, 42, 39));
+        tabuleiro.addPropriedade(new Terreno("Av. Presidente Vargas",       60, 30,  6,  3));
+        tabuleiro.addPropriedade(new Terreno("Av. Nossa Sra. De Copacabana",60, 30,  6,  4));
+        tabuleiro.addPropriedade(new Companhia("Companhia Ferroviária",    200, 1, 25,   5));
+        tabuleiro.addPropriedade(new Terreno("Av. Brigadeiro Faria Lima",  240,120, 24,  6));
+        tabuleiro.addPropriedade(new Companhia("Companhia de Viação",      200, 1, 28,   7));
+        tabuleiro.addPropriedade(new Terreno("Av. Rebouças",               220,110, 22,  8));
+        tabuleiro.addPropriedade(new Terreno("Av. 9 de Julho",             220,110, 22,  9));
+        tabuleiro.addPropriedade(new Terreno("Av. Europa",                 200,100, 20, 11));
+        tabuleiro.addPropriedade(new Terreno("Rua Augusta",                180, 90, 18, 13));
+        tabuleiro.addPropriedade(new Terreno("Av. Pacaembú",               180, 90, 18, 14));
+        tabuleiro.addPropriedade(new Companhia("Companhia de Táxi",        150, 1, 22,  15));
+        tabuleiro.addPropriedade(new Terreno("Interlagos",                 350,175, 35, 17));
+        tabuleiro.addPropriedade(new Terreno("Morumbi",                    400,200, 40, 19));
+        tabuleiro.addPropriedade(new Terreno("Flamengo",                   120, 60, 12, 21));
+        tabuleiro.addPropriedade(new Terreno("Botafogo",                   100, 50, 10, 22));
+        tabuleiro.addPropriedade(new Companhia("Companhia de Navegação",   150, 1, 25,  24));
+        tabuleiro.addPropriedade(new Terreno("Av. Brasil",                 160, 80, 16, 26));
+        tabuleiro.addPropriedade(new Terreno("Av. Paulista",               140, 70, 14, 27));
+        tabuleiro.addPropriedade(new Terreno("Jardim Europa",              140, 70, 14, 29));
+        tabuleiro.addPropriedade(new Terreno("Copacabana",                 260,130, 26, 31));
+        tabuleiro.addPropriedade(new Companhia("Companhia de Aviação",     200, 1, 28,  32));
+        tabuleiro.addPropriedade(new Terreno("Av. Vieira Souto",           320,160, 32, 33));
+        tabuleiro.addPropriedade(new Terreno("Av. Atlântica",              300,150, 30, 34));
+        tabuleiro.addPropriedade(new Companhia("Companhia de Táxi Aéreo",  200, 1, 30,  35));
+        tabuleiro.addPropriedade(new Terreno("Ipanema",                    300,150, 30, 36));
+        tabuleiro.addPropriedade(new Terreno("Jardim Paulista",            280,140, 28, 38));
+        tabuleiro.addPropriedade(new Terreno("Brooklin",                   260,130, 26, 39));
     }
+
 
     // ==================== Notificação agregada (diff) ====================
     private void detectarENotificarEstadoGlobal() {
