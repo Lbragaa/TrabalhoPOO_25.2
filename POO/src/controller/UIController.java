@@ -254,6 +254,16 @@ public class UIController implements GameObserver {
     }
 
     @Override
+    public void onSpecialCell(int indiceJogador, int celula, int valor, String descricao) {
+        String titulo = (valor >= 0) ? "Lucros/Dividendos" : "Imposto de Renda";
+        Color corDono = null; // casas especiais não têm dono
+        property.showForCell(celula, false, corDono, titulo,
+                ui.getNome(indiceJogador) + ": " + descricao);
+        refreshHud(game.getIndiceJogadorDaVez());
+        board.repaint();
+    }
+
+    @Override
     public void onChanceCard(int indiceJogador, int celula, int numero, String tipo, int valor) {
         String detalhe;
         switch (tipo) {
