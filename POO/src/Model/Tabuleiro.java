@@ -17,7 +17,8 @@ class Tabuleiro {
     private static final int POSICAO_VAI_PRA_PRISAO = 30; // gatilho
     private static final int POSICAO_PRISAO = 10;         // prisão/visita
     private static final Set<Integer> CHANCE_CELLS = Set.of(2, 12, 16, 22, 27, 37);
-
+    private static final int POSICAO_LUCROS_DIVIDENDOS = 18;
+    private static final int POSICAO_IMPOSTO_RENDA = 24;
     protected List<Propriedade> propriedades;
     protected List<Jogador> jogadoresAtivos;
     protected final Queue<Carta> baralhoSorteReves;
@@ -26,7 +27,7 @@ class Tabuleiro {
         this.propriedades = new ArrayList<>();
         this.jogadoresAtivos = new ArrayList<>();
         this.baralhoSorteReves = new LinkedList<>();
-        inicializarBaralhoSorteRevesDefault(); // baralho real (chance1..chance30)
+        inicializarBaralhoSorteRevesDefault(); // baralho real (chance1..chance30) embaralhado
     }
 
     /** Total de casas (0..39). */
@@ -43,6 +44,12 @@ class Tabuleiro {
 
     /** Se a posição é uma casa de Sorte/Revés. */
     public boolean isChanceCell(int posicao) { return CHANCE_CELLS.contains(posicao); }
+
+        /** Se a posição é a casa de lucros/dividendos (18). */
+    public boolean isCasaLucrosDividendos(int posicao) { return posicao == POSICAO_LUCROS_DIVIDENDOS; }
+
+    /** Se a posição é a casa de imposto de renda (24). */
+    public boolean isCasaImpostoRenda(int posicao) { return posicao == POSICAO_IMPOSTO_RENDA; }
 
     // ---------- Propriedades ----------
     public void addPropriedade(Propriedade p) { propriedades.add(p); }
@@ -73,54 +80,62 @@ class Tabuleiro {
         baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,       200, 10));
     }
 
-    /** Baralho real: chance1.png .. chance30.png mapeados para tipo/valor. */
+    /** Baralho real: chance1.png .. chance30.png mapeados para tipo/valor, embaralhado. */
     public void inicializarBaralhoSorteRevesDefault() {
         baralhoSorteReves.clear();
-        
-        // Eh so ficar trocando essa ordem aqui pra gnt poder testar cada carta do sorte/reves
-        
-        baralhoSorteReves.offer(new Carta(TipoCarta.SAIDA_LIVRE,      0,  9));
-        
-     // PAGAR
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 24));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 25));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           25, 26));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 27));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           45, 28));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 29));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           50, 30));
-        
-        // RECEBER
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         25,  1));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        150,  2));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         80,  3));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        200,  4));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         50,  5));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         50,  6));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        100,  7));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        100,  8));
-        // SAIDA_LIVRE
-        
-        // RECEBER
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        200, 10));
-        // RECEBER_DE_CADA
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER_DE_CADA, 50, 11));
-        // RECEBER
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         45, 12));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        100, 13));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,        100, 14));
-        baralhoSorteReves.offer(new Carta(TipoCarta.RECEBER,         20, 15));
+        List<Carta> cartas = new ArrayList<>();
+
+        // SAÍDA_LIVRE
+        cartas.add(new Carta(TipoCarta.SAIDA_LIVRE,      0,  9));
+
         // PAGAR
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           15, 16));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           25, 17));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           45, 18));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           30, 19));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,          100, 20));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,          100, 21));
-        baralhoSorteReves.offer(new Carta(TipoCarta.PAGAR,           40, 22));
+        cartas.add(new Carta(TipoCarta.PAGAR,           30, 24));
+        cartas.add(new Carta(TipoCarta.PAGAR,           50, 25));
+        cartas.add(new Carta(TipoCarta.PAGAR,           25, 26));
+        cartas.add(new Carta(TipoCarta.PAGAR,           30, 27));
+        cartas.add(new Carta(TipoCarta.PAGAR,           45, 28));
+        cartas.add(new Carta(TipoCarta.PAGAR,           50, 29));
+        cartas.add(new Carta(TipoCarta.PAGAR,           50, 30));
+
+        // RECEBER
+        cartas.add(new Carta(TipoCarta.RECEBER,         25,  1));
+        cartas.add(new Carta(TipoCarta.RECEBER,        150,  2));
+        cartas.add(new Carta(TipoCarta.RECEBER,         80,  3));
+        cartas.add(new Carta(TipoCarta.RECEBER,        200,  4));
+        cartas.add(new Carta(TipoCarta.RECEBER,         50,  5));
+        cartas.add(new Carta(TipoCarta.RECEBER,         50,  6));
+        cartas.add(new Carta(TipoCarta.RECEBER,        100,  7));
+        cartas.add(new Carta(TipoCarta.RECEBER,        100,  8));
+
+        // RECEBER
+        cartas.add(new Carta(TipoCarta.RECEBER,        200, 10));
+
+        // RECEBER_DE_CADA
+        cartas.add(new Carta(TipoCarta.RECEBER_DE_CADA, 50, 11));
+
+        // RECEBER
+        cartas.add(new Carta(TipoCarta.RECEBER,         45, 12));
+        cartas.add(new Carta(TipoCarta.RECEBER,        100, 13));
+        cartas.add(new Carta(TipoCarta.RECEBER,        100, 14));
+        cartas.add(new Carta(TipoCarta.RECEBER,         20, 15));
+
+        // PAGAR
+        cartas.add(new Carta(TipoCarta.PAGAR,           15, 16));
+        cartas.add(new Carta(TipoCarta.PAGAR,           25, 17));
+        cartas.add(new Carta(TipoCarta.PAGAR,           45, 18));
+        cartas.add(new Carta(TipoCarta.PAGAR,           30, 19));
+        cartas.add(new Carta(TipoCarta.PAGAR,          100, 20));
+        cartas.add(new Carta(TipoCarta.PAGAR,          100, 21));
+        cartas.add(new Carta(TipoCarta.PAGAR,           40, 22));
+
         // VAI PARA PRISÃO
-        baralhoSorteReves.offer(new Carta(TipoCarta.VAI_PARA_PRISAO,  0, 23));
-        
+        cartas.add(new Carta(TipoCarta.VAI_PARA_PRISAO,  0, 23));
+
+        // Embaralha a lista inteira e cria a fila nessa ordem
+        Collections.shuffle(cartas);
+        for (Carta c : cartas) {
+            baralhoSorteReves.offer(c);
+        }
     }
 
     /** Compra uma carta. SAÍDA_LIVRE não retorna ao baralho agora. */
