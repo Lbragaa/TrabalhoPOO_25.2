@@ -277,6 +277,19 @@ public final class GameFacade implements GameSubject {
 
         for (GameObserver o : observadores) o.onMoved(indiceJogadorDaVez, celulaOrigem, celulaDestino);
 
+        // Casas especiais fixas (lucros/dividendos e IR)
+        if (tabuleiro.isCasaLucrosDividendos(celulaDestino)) {
+            banco.getConta().paga(jogadorDaVez.getConta(), 200);
+            for (GameObserver o : observadores) {
+                o.onSpecialCell(indiceJogadorDaVez, celulaDestino, 200, "Lucros ou dividendos: +200");
+            }
+        } else if (tabuleiro.isCasaImpostoRenda(celulaDestino)) {
+            jogadorDaVez.getConta().paga(banco.getConta(), 200);
+            for (GameObserver o : observadores) {
+                o.onSpecialCell(indiceJogadorDaVez, celulaDestino, -200, "Imposto de renda: -200");
+            }
+        }
+
         // Aluguel se for propriedade
         Propriedade propriedadeAtual = tabuleiro.getPropriedadeNaPosicao(celulaDestino);
         if (propriedadeAtual != null) {
