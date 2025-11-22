@@ -17,8 +17,6 @@ public interface GameObserver {
     /** Notifica mudança de turno (índice do jogador da vez). */
     default void onTurnChanged(int currentPlayerIndex) {}
 
-    // ====== Eventos adicionais de mudança de estado ======
-
     /** Notifica alteração de saldo do jogador. */
     default void onBalanceChanged(int playerIndex, int newBalance) {}
 
@@ -39,4 +37,7 @@ public interface GameObserver {
 
     /** Notifica que uma carta de Sorte/Revés foi puxada. */
     default void onChanceCard(int playerIndex, int cell, int cardNumber, String tipo, int valor) {}
+
+     /** Notifica disparo de casa especial fixa (ex.: lucros/dividendos ou IR). */
+    default void onSpecialCell(int playerIndex, int cell, int valor, String descricao) {}
 }
