@@ -79,9 +79,9 @@ BANCO=200000
 ORDEM=0,1,2
 PONTEIRO=0
 PLAYERS=3
-PLAYER|Ana|4000|0|0|0|0|255,0,0
+PLAYER|Antonio|4000|0|0|0|0|255,0,0
 PLAYER|Bruno|4000|5|0|0|0|0,0,255
-PLAYER|Carla|4000|10|0|0|0|255,200,0
+PLAYER|Carlos|4000|10|0|0|0|255,200,0
 PROPS
 PROP|19|1|2|0
 DECK
@@ -91,8 +91,8 @@ CARD|RECEBER|50|1
 Descrição breve:
 3 jogadores
 Posições(0 a 39)
-ANA - Casa 0
+Antonio - Casa 0
 Bruno - Casa 5
-Carla - Casa 10
+Carlos - Casa 10
 Bruno(Índice de jogador 1) tem a propriedade 19(Morumbi) e tem 2 casas
 As próximas cartas tiradas no Sorte ou Revés serão VAI_PARA_PRISAO e depois RECEBER 50
