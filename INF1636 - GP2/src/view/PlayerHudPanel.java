@@ -12,6 +12,7 @@ public class PlayerHudPanel extends JPanel {
     private final JLabel lblBalance    = new JLabel("Saldo: R$ —");
     private final JLabel lblAllBalances = new JLabel("Saldos: —"); // NOVO
     private final JButton btnVerProps  = new JButton("Ver propriedades");
+    private final JButton btnEncerrar  = new JButton("Encerrar partida");
 
     private static final NumberFormat BRL_INT =
             NumberFormat.getIntegerInstance(new Locale("pt","BR"));
@@ -35,6 +36,10 @@ public class PlayerHudPanel extends JPanel {
         add(Box.createHorizontalStrut(1), c);
         c.gridx = 3; c.weightx = 0; c.fill = GridBagConstraints.NONE;
         add(btnVerProps, c);
+
+        // Linha 0: botão de encerrar (lado direito)
+        c.gridx = 4;
+        add(btnEncerrar, c);
 
         // Linha 1: saldos de todos os jogadores
         c.gridy = 1;
@@ -62,4 +67,7 @@ public class PlayerHudPanel extends JPanel {
 
     /** Exposto para o controller ouvir o clique. */
     public JButton viewPropsButton() { return btnVerProps; }
+
+    /** Exposto para o controller ouvir o clique de encerrar. */
+    public JButton endGameButton() { return btnEncerrar; }
 }
