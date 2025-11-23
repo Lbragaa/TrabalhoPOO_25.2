@@ -163,7 +163,7 @@ public class IntegrationTests {
         terreno.adicionaCasa();
         terreno.adicionaCasa();
         terreno.adicionaCasa();
-        terreno.adicionaCasa(); // vira hotel
+        terreno.adicionaHotel(); // adiciona hotel apA3s jA� ter casas
 
         File tmp = File.createTempFile("monopoly-props", ".txt"); tmp.deleteOnExit();
         game.salvarParaArquivo(tmp, new Color[]{Color.RED, Color.BLUE});

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Motor com as regras operacionais: rolar dados, mover, prisão, aluguel, compra,
- * construir, cartas, saída por dupla e falência.
- * <p>É usado pela {@link GameFacade} para executar ações do turno.</p>
+ * Motor com as regras operacionais: rolar dados, mover, prisao, aluguel, compra,
+ * construir, cartas, saida por dupla e falencia.
+
  */
 public class MotorDeJogo {
 
@@ -20,7 +20,7 @@ public class MotorDeJogo {
         this.tabuleiro = tabuleiro;
     }
 
-    /** Lança dois dados de 6 faces. */
+    /** LanAa dois dados de 6 faces. */
     public List<Integer> lancarDados() {
         List<Integer> dados = new ArrayList<>(2);
         dados.add(rng.nextInt(6) + 1);
@@ -35,7 +35,7 @@ public class MotorDeJogo {
             && dados.get(0).intValue() == dados.get(1).intValue();
     }
 
-    /** Move e resolve "vá para a prisão" + aluguel. */
+    /** Move e resolve "va para a prisao" + aluguel. */
     public void moverJogador(Jogador jogador, List<Integer> dados) {
         if (jogador == null || dados == null || dados.isEmpty()) return;
 
@@ -65,21 +65,15 @@ public class MotorDeJogo {
         }
     }
 
-    /** Constrói casa no terreno onde o jogador está (se puder e pagar). */
-    /** Constrói casa ou hotel no terreno onde o jogador está (se puder e pagar). */
-    /** Builds a house or hotel (depending on state) on the property where the player is. */
+    /** ConstrA3i casa no terreno onde o jogador estA� (se puder e pagar). */
     public void construirCasa(Jogador jogador, Propriedade propriedade) {
         Propriedade atual = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
         if (propriedade != atual) return;
 
         if (propriedade instanceof Terreno terreno) {
-            if (terreno.getProprietario() != jogador || !terreno.podeConstruir()) return;
+            if (terreno.getProprietario() != jogador || !terreno.podeConstruirCasa()) return;
 
-            int custo = (terreno.getNumCasas() < 4)
-                    ? terreno.getValorCasa()   // building a house
-                    : terreno.getValorHotel(); // building the hotel
-
-            boolean pagou = jogador.getConta().paga(banco.getConta(), custo);
+            boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getValorCasa());
             if (pagou) {
                 terreno.adicionaCasa();
             } else {
@@ -88,11 +82,27 @@ public class MotorDeJogo {
         }
     }
 
+    /** ConstrA3i hotel no terreno onde o jogador estA� (se puder e pagar). */
+    public void construirHotel(Jogador jogador, Propriedade propriedade) {
+        Propriedade atual = tabuleiro.getPropriedadeNaPosicao(jogador.getPosicao());
+        if (propriedade != atual) return;
+
+        if (propriedade instanceof Terreno terreno) {
+            if (terreno.getProprietario() != jogador || !terreno.podeConstruirHotel()) return;
+
+            boolean pagou = jogador.getConta().paga(banco.getConta(), terreno.getValorHotel());
+            if (pagou) {
+                terreno.adicionaHotel();
+            } else {
+                verificarFalencia(jogador);
+            }
+        }
+    }
 
     /**
-     * Cobrança de aluguel (regra existente):
-     * - Terreno só cobra se tiver ≥ 1 casa;
-     * - Demais propriedades usam sua própria implementação de cálculo.
+     * Cobranca de aluguel (regra existente):
+     * - Terreno so cobra se tiver pelo menos 1 casa;
+     * - Demais propriedades usam sua propria implementacao de calculo.
      */
     public void pagarAluguel(Jogador jogador, Propriedade propriedade) {
         if (jogador == null || propriedade == null) return;
@@ -109,13 +119,13 @@ public class MotorDeJogo {
 
         boolean pagou = jogador.getConta().paga(dono.getConta(), valorAPagar);
         if (!pagou) {
-            // sinalizamos falência sem forçar saldo negativo
+            // sinalizamos falA�ncia sem forAar saldo negativo
             jogador.setFalido(true);
             verificarFalencia(jogador);
         }
     }
 
-    /** Checa casa "vá para a prisão". */
+    /** Checa casa "va para a prisao". */
     public void verificarPrisao(Jogador jogador) {
         if (jogador == null) return;
         if (tabuleiro.isCasaPrisao(jogador.getPosicao())) jogador.prende();
@@ -151,7 +161,7 @@ public class MotorDeJogo {
         return c;
     }
 
-    /** Usa carta de saída livre, devolvendo-a ao fim do baralho. */
+    /** Usa carta de saida livre, devolvendo-a ao fim do baralho. */
     public boolean usarCartaLiberacao(Jogador j) {
         if (j == null || !j.estaPreso()) return false;
         if (!j.consumirCartaLiberacao()) return false;
@@ -161,9 +171,9 @@ public class MotorDeJogo {
     }
 
     /**
-     * Falência: libera propriedades e remove do tabuleiro.
-     * <p><b>Atenção:</b> a {@link GameFacade} ainda mantém o jogador na ordem/lista.
-     * Ela deve ignorar falidos ou reagir a essa remoção.</p>
+     * Falencia: libera propriedades e remove do tabuleiro.
+     * ainda mantém o jogador na ordem/lista.
+     * Ela deve ignorar falidos ou reagir a essa remoção.
      */
     public boolean verificarFalencia(Jogador jogador) {
         if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
@@ -176,3 +186,4 @@ public class MotorDeJogo {
         return false;
     }
 }
+

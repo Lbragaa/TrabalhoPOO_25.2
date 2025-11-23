@@ -1,7 +1,7 @@
 package Model;
 
 /**
- * Terreno construível (até 4 casas, passando então para hotel).
+ * Terreno construA-vel (atAc 4 casas, passando entA�o para hotel).
  */
 class Terreno extends Propriedade {
 
@@ -14,24 +14,29 @@ class Terreno extends Propriedade {
         this.temHotel = false;
     }
 
-    // --------- CONSTRUÇÃO ---------
+    // --------- CONSTRUA�A�O ---------
 
-    /** Pode construir enquanto ainda não houver hotel (máx. 4 casas + 1 hotel). */
+    /** Pode construir enquanto houver espaA�o para casa ou hotel. */
     public boolean podeConstruir() {
-        return !temHotel && numCasas <= 4;
+        return podeConstruirCasa() || podeConstruirHotel();
     }
 
-    /** Adiciona construção: até 4 casas; após isso, vira hotel sem zerar casas. */
-    public void adicionaCasa() {
-        if (!podeConstruir()) return;
+    /** Indica se ainda pode construir casa (mA�x. 4 casas). */
+    public boolean podeConstruirCasa() { return numCasas < 4; }
 
-        if (numCasas < 4) {
-            // constrói mais uma casa
-            numCasas++;
-        } else if (numCasas == 4) {
-            // já tem 4 casas, agora adiciona hotel (continua com 4 casas)
-            temHotel = true;
-        }
+    /** Indica se pode construir hotel (precisa de pelo menos 1 casa e nA�o ter hotel). */
+    public boolean podeConstruirHotel() { return numCasas >= 1 && !temHotel; }
+
+    /** Adiciona uma casa (nA�o mexe no status de hotel). */
+    public void adicionaCasa() {
+        if (!podeConstruirCasa()) return;
+        numCasas++;
+    }
+
+    /** Marca construAA�o de hotel (mantAcm quantidade de casas). */
+    public void adicionaHotel() {
+        if (!podeConstruirHotel()) return;
+        temHotel = true;
     }
 
     public int getNumCasas()   { return numCasas; }
@@ -51,7 +56,8 @@ class Terreno extends Propriedade {
     }
 
     // --------- GETTERS ---------
-    public int getValorCasa() { return (int)(preco * 0.50); } // casa custa 50% do preço
-    public int getValorHotel() { return preco; } // hotel custa 100% do preço
+    public int getValorCasa() { return (int)(preco * 0.50); } // casa custa 50% do preAo
+    public int getValorHotel() { return preco; } // hotel custa 100% do preAo
     void resetConstrucoes() { this.numCasas = 0; this.temHotel = false; }
 }
+

@@ -137,14 +137,27 @@ public final class GameFacade implements GameSubject {
         return p.getProprietario() == jogadores.get(indiceJogador);
     }
 
-    public boolean podeConstruirAqui(int indiceJogador) {
+        public boolean podeConstruirAqui(int indiceJogador) {
+        return podeConstruirCasaAqui(indiceJogador) || podeConstruirHotelAqui(indiceJogador);
+    }
+
+    /** Indica se o jogador pode construir casa na posicao atual. */
+    public boolean podeConstruirCasaAqui(int indiceJogador) {
         Jogador j = jogadores.get(indiceJogador);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
-        if (p instanceof Terreno t) return t.getProprietario() == j && t.podeConstruir();
+        if (p instanceof Terreno t) return t.getProprietario() == j && t.podeConstruirCasa();
         return false;
     }
 
-    public int getValorCasaAqui(int indiceJogador) {
+    /** Indica se o jogador pode construir hotel na posicao atual. */
+    public boolean podeConstruirHotelAqui(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
+        if (p instanceof Terreno t) return t.getProprietario() == j && t.podeConstruirHotel();
+        return false;
+    }
+
+public int getValorCasaAqui(int indiceJogador) {
         Jogador j = jogadores.get(indiceJogador);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
         if (p instanceof Terreno t) return t.getValorCasa();
@@ -173,12 +186,12 @@ public final class GameFacade implements GameSubject {
         return 0;
     }
 
-    /** NOVO: indica se a próxima construção nesta posição será hotel (4 casas e ainda sem hotel). */
+            /** Indica se a proxima construcao obrigatoriamente sera hotel (sem vaga para novas casas). */
     public boolean proximaConstrucaoEhHotelAqui(int indiceJogador) {
         Jogador j = jogadores.get(indiceJogador);
         Propriedade p = tabuleiro.getPropriedadeNaPosicao(j.getPosicao());
         if (p instanceof Terreno t) {
-            return t.getProprietario() == j && t.getNumCasas() == 4 && !t.temHotel();
+            return t.getProprietario() == j && !t.temHotel() && !t.podeConstruirCasa() && t.podeConstruirHotel();
         }
         return false;
     }
@@ -327,6 +340,26 @@ public final class GameFacade implements GameSubject {
         detectarENotificarEstadoGlobal();
     }
 
+    /** ConstrA3i hotel na posicao atual do jogador (se puder e pagar). */
+    public void construirHotelNoLocal(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        int celula = j.getPosicao();
+        Propriedade p = tabuleiro.getPropriedadeNaPosicao(celula);
+
+        boolean tinhaHotelAntes = p instanceof Terreno t && t.temHotel();
+        int casasAntes = p instanceof Terreno t ? t.getNumCasas() : -1;
+
+        motor.construirHotel(j, p);
+
+        boolean temHotelDepois = p instanceof Terreno t && t.temHotel();
+        int casasDepois = p instanceof Terreno t ? t.getNumCasas() : -1;
+
+        if (p instanceof Terreno && (temHotelDepois && !tinhaHotelAntes || casasDepois > casasAntes)) {
+            notificarCasaConstruida(indiceJogador, celula, casasDepois);
+        }
+        detectarENotificarEstadoGlobal();
+    }
+
     public void puxarSorteReves(int indiceJogador) {
         // Mantido para compatibilidade (ex.: testes ou botões manuais)
         motor.puxarSorteReves(jogadores.get(indiceJogador));
@@ -441,7 +474,7 @@ public final class GameFacade implements GameSubject {
             if (p instanceof Terreno t) {
                 t.resetConstrucoes();
                 for (int i = 0; i < pd.casas(); i++) t.adicionaCasa();
-                if (pd.hotel() == 1) t.adicionaCasa();
+                if (pd.hotel() == 1) t.adicionaHotel();
             }
         }
 

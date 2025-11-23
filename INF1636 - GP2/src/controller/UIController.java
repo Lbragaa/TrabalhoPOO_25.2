@@ -169,23 +169,57 @@ public class UIController implements GameObserver {
                 }
             } else if (game.jogadorEhDonoDaPosicao(indiceJogador, celulaDestino) && game.podeConstruirAqui(indiceJogador)) {
 
-                boolean construirHotel = game.proximaConstrucaoEhHotelAqui(indiceJogador);
-                int valor = construirHotel
-                        ? game.getValorHotelAqui(indiceJogador)
-                        : game.getValorCasaAqui(indiceJogador);
-                if (game.getSaldo(indiceJogador) < valor) {
-                    board.repaint();
-                    return;
-                }
+                boolean podeCasa = game.podeConstruirCasaAqui(indiceJogador);
+                boolean podeHotel = game.podeConstruirHotelAqui(indiceJogador);
 
-                String tipo = construirHotel ? "hotel" : "casa";
-                String titulo = construirHotel ? "Construir hotel" : "Construir casa";
+                int valorCasa = game.getValorCasaAqui(indiceJogador);
+                int valorHotel = game.getValorHotelAqui(indiceJogador);
 
-                int opt = JOptionPane.showConfirmDialog(board,
-                        "Construir " + tipo + " por R$ " + valor + " nesta propriedade?",
-                        titulo, JOptionPane.YES_NO_OPTION);
-                if (opt == JOptionPane.YES_OPTION) {
-                    game.construirCasaNoLocal(indiceJogador);
+                if (podeCasa && podeHotel) {
+                    Object[] options = {
+                            "Casa (R$ " + valorCasa + ")",
+                            "Hotel (R$ " + valorHotel + ")",
+                            "Cancelar"
+                    };
+                    int choice = JOptionPane.showOptionDialog(
+                            board,
+                            "Escolha o que construir nesta propriedade:",
+                            "Construir",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]
+                    );
+                    if (choice == 0 && game.getSaldo(indiceJogador) >= valorCasa) {
+                        game.construirCasaNoLocal(indiceJogador);
+                    } else if (choice == 1 && game.getSaldo(indiceJogador) >= valorHotel) {
+                        game.construirHotelNoLocal(indiceJogador);
+                    }
+                } else if (podeHotel) {
+                    if (game.getSaldo(indiceJogador) >= valorHotel) {
+                        int opt = JOptionPane.showConfirmDialog(
+                                board,
+                                "Construir hotel por R$ " + valorHotel + " nesta propriedade?",
+                                "Construir hotel",
+                                JOptionPane.YES_NO_OPTION
+                        );
+                        if (opt == JOptionPane.YES_OPTION) {
+                            game.construirHotelNoLocal(indiceJogador);
+                        }
+                    }
+                } else if (podeCasa) {
+                    if (game.getSaldo(indiceJogador) >= valorCasa) {
+                        int opt = JOptionPane.showConfirmDialog(
+                                board,
+                                "Construir casa por R$ " + valorCasa + " nesta propriedade?",
+                                "Construir casa",
+                                JOptionPane.YES_NO_OPTION
+                        );
+                        if (opt == JOptionPane.YES_OPTION) {
+                            game.construirCasaNoLocal(indiceJogador);
+                        }
+                    }
                 }
             }
         }
