@@ -6,7 +6,7 @@ Integrantes:
 - Bruno Tardin Fernandes — 2411072
 
 Classe com método main:
-- (Preencha aqui, ex.: view.MainFrame)
+- MainFrame.java
 
 Formato do arquivo de salvamento (texto ASCII):
 - Cabeçalho:
