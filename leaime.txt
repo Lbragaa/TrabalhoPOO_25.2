@@ -2,7 +2,7 @@ Trabalho INF1636 – Banco Imobiliário Simplificado
 
 Integrantes:
 - Luan Carlos Almada Braga — 2411776
-- Eduardo Deutscher 2 — 2210218
+- Eduardo Deutscher — 2210218
 - Bruno Tardin Fernandes — 2411072
 
 Classe com método main:
