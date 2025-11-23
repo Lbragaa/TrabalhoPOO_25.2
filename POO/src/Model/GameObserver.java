@@ -38,6 +38,9 @@ public interface GameObserver {
     /** Notifica que uma carta de Sorte/Revés foi puxada. */
     default void onChanceCard(int playerIndex, int cell, int cardNumber, String tipo, int valor) {}
 
-     /** Notifica disparo de casa especial fixa (ex.: lucros/dividendos ou IR). */
+    /** Notifica disparo de casa especial fixa (ex.: lucros/dividendos ou IR). */
     default void onSpecialCell(int playerIndex, int cell, int valor, String descricao) {}
+
+    /** Notifica uso de carta de liberação automática (saiu da prisão). */
+    default void onReleaseCardUsed(int playerIndex) {}
 }
