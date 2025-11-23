@@ -246,7 +246,13 @@ public final class GameFacade implements GameSubject {
     public boolean verificarFalencia(int indiceJogador) {
         boolean faliu = motor.verificarFalencia(jogadores.get(indiceJogador));
         detectarENotificarEstadoGlobal();
+        verificarFimPorUnicoRestante();
         return faliu;
+    }
+
+    /** Encerra partida manualmente (ex.: botão/fechar janela). */
+    public void encerrarPartida() {
+        notificarFimPartida();
     }
 
     // ---------- Fluxo interno ----------
@@ -417,5 +423,50 @@ public final class GameFacade implements GameSubject {
             // Agora avisa a UI para exibir o popup da carta usada
             for (GameObserver o : observadores) o.onReleaseCardUsed(indiceJogador);
         }
+    }
+
+    /** Se restar apenas um jogador não falido, encerra a partida automaticamente. */
+    private void verificarFimPorUnicoRestante() {
+        int vivo = -1, vivos = 0;
+        for (int i = 0; i < jogadores.size(); i++) {
+            if (!jogadores.get(i).isFalido()) { vivos++; vivo = i; }
+        }
+        if (vivos == 1) {
+            notificarFimPartida();
+        }
+    }
+
+    /** Calcula capital de cada jogador e notifica observadores com o vencedor. */
+    private void notificarFimPartida() {
+        int n = jogadores.size();
+        int[] capitais = new int[n];
+        int winner = -1;
+        int maior = Integer.MIN_VALUE;
+
+        for (int i = 0; i < n; i++) {
+            capitais[i] = calcularCapital(i);
+            if (capitais[i] > maior) {
+                maior = capitais[i];
+                winner = i;
+            }
+        }
+        for (GameObserver o : observadores) o.onGameEnded(winner, capitais);
+    }
+
+    /** Capital = saldo + valor das propriedades + construções. */
+    private int calcularCapital(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        int total = j.getConta().getSaldo();
+        for (int pos = 0; pos < 40; pos++) {
+            Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
+            if (p != null && p.getProprietario() == j) {
+                total += p.getPreco();
+                if (p instanceof Terreno t) {
+                    total += t.getNumCasas() * t.getValorCasa();
+                    if (t.temHotel()) total += t.getValorHotel();
+                }
+            }
+        }
+        return total;
     }
 }
