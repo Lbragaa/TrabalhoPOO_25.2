@@ -6,54 +6,93 @@ Integrantes:
 - Bruno Tardin Fernandes — 2411072
 
 Classe com método main:
-- (Preencha aqui, ex.: view.MainFrame ou equivalente)
+- (Preencha aqui, ex.: view.MainFrame)
 
 Formato do arquivo de salvamento (texto ASCII):
-- Primeira parte: cabeçalho de estado global
-  BANCO=<saldo_do_banco>
-  ORDEM=<índices separados por vírgula>         ; ordem dos jogadores na rodada
-  PONTEIRO=<índice_atual_na_ORDEM>              ; ponteiro do turno (mod tamanho da ORDEM)
-  PLAYERS=<quantidade_de_jogadores>             ; deve bater com o número de linhas PLAYER a seguir
+- Cabeçalho:
+  BANCO=<saldo_do_banco> 
+  ORDEM=<índices separados por vírgula> ; ordem dos jogadores na rodada
+  PONTEIRO=<índice_atual_na_ORDEM>  ; ponteiro do turno (mod tamanho da ORDEM)
+  PLAYERS=<quantidade_de_jogadores> ; deve bater com o número de linhas PLAYER a segui
 
 - Bloco de jogadores:
-  Uma linha por jogador na mesma ordem do cadastro:
+Uma linha por jogador na mesma ordem do cadastro:
   PLAYER|nome|saldo|posicao|preso(0/1)|falido(0/1)|cartasSaidaLivre|R,G,B
     • nome: texto sem “|”
     • saldo: inteiro
     • posicao: 0..39
     • preso: 1 se estiver preso, 0 caso contrário
-    • falido: 1 se estiver falido (será removido do tabuleiro ao carregar), 0 caso contrário
+    • falido: 1 se estiver falido (removido do tabuleiro ao carregar), 0 caso contrário
     • cartasSaidaLivre: quantidade de cartas de saída da prisão que o jogador possui
-    • R,G,B: cor do jogador em valores 0..255
+    • R,G,B: cor do jogador (0..255 cada)
 
 - Bloco de propriedades:
-  Linha “PROPS” seguida de zero ou mais linhas:
+  PROPS
   PROP|posicao|ownerIndex|casas|hotel
     • posicao: 0..39
-    • ownerIndex: índice do jogador (mesma ordem das linhas PLAYER); -1 para sem dono
+    • ownerIndex: índice do jogador (mesma ordem das linhas PLAYER); -1 = sem dono
     • casas: número de casas (0..4)
-    • hotel: 0 ou 1 (1 apenas se já tiver pelo menos 1 casa)
-  Observação: no carregamento, casas são aplicadas e, se hotel=1, chama-se adicionaHotel.
+    • hotel: 0 ou 1 (1 só se já houver ao menos 1 casa)
 
-- Bloco do baralho Sorte/Revés:
-  Linha “DECK” seguida das cartas, na ordem de compra (a primeira linha é a próxima a ser comprada):
+- Bloco do baralho Sorte/Revés (fila completa na ordem de compra; primeira linha é a próxima):
+  DECK
   CARD|TIPO|valor|codigo
     • TIPO: VAI_PARA_PRISAO, SAIDA_LIVRE, PAGAR, RECEBER, RECEBER_DE_CADA
     • valor: inteiro (0 para prisão/saída livre)
-    • codigo: número da carta correspondente à imagem (1..30)
-  Regra: cartas não-SAIDA_LIVRE voltam ao fim da fila após compradas; SAIDA_LIVRE fica com o jogador e retorna ao baralho somente quando usada.
+    • codigo: número da carta (1..30) que corresponde ao arquivo PNG
+  Regra: cartas não-SAIDA_LIVRE retornam ao fim da fila após compradas; 
+
+Lista de cartas padrão (codigo, TIPO, valor):
+01: RECEBER 25
+02: RECEBER 150
+03: RECEBER 80
+04: RECEBER 200
+05: RECEBER 50
+06: RECEBER 50
+07: RECEBER 100
+08: RECEBER 100
+09: SAIDA_LIVRE 0
+10: RECEBER 200
+11: RECEBER_DE_CADA 50
+12: RECEBER 45
+13: RECEBER 100
+14: RECEBER 100
+15: RECEBER 20
+16: PAGAR 15
+17: PAGAR 25
+18: PAGAR 45
+19: PAGAR 30
+20: PAGAR 100
+21: PAGAR 100
+22: PAGAR 40
+23: VAI_PARA_PRISAO 0
+24: PAGAR 30
+25: PAGAR 50
+26: PAGAR 25
+27: PAGAR 30
+28: PAGAR 45
+29: PAGAR 50
+30: PAGAR 50
 
 Exemplo mínimo:
 BANCO=200000
 ORDEM=0,1,2
 PONTEIRO=0
 PLAYERS=3
-PLAYER|Antonio|4000|0|0|0|0|255,0,0
+PLAYER|Ana|4000|0|0|0|0|255,0,0
 PLAYER|Bruno|4000|5|0|0|0|0,0,255
-PLAYER|Carlos|4000|10|0|0|0|255,200,0
+PLAYER|Carla|4000|10|0|0|0|255,200,0
 PROPS
 PROP|19|1|2|0
 DECK
 CARD|VAI_PARA_PRISAO|0|23
 CARD|RECEBER|50|1
 
+Descrição breve:
+3 jogadores
+Posições(0 a 39)
+ANA - Casa 0
+Bruno - Casa 5
+Carla - Casa 10
+Bruno(Índice de jogador 1) tem a propriedade 19(Morumbi) e tem 2 casas
+As próximas cartas tiradas no Sorte ou Revés serão VAI_PARA_PRISAO e depois RECEBER 50
