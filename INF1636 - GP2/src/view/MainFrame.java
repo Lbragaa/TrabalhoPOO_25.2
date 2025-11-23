@@ -6,6 +6,8 @@ import infra.UiState;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /** Janela principal: monta a UI, inicializa GameFacade e conecta o UIController. */
 public class MainFrame extends JFrame {
@@ -41,7 +43,14 @@ public class MainFrame extends JFrame {
         root.add(dice,     BorderLayout.NORTH);
         setContentPane(root);
 
-        new UIController(board, dice, ui, property, hud, game);
+        UIController controller = new UIController(board, dice, ui, property, hud, game);
+
+        // Ao fechar a janela, encerra a partida (apurando vencedor) antes de sair
+        addWindowListener(new WindowAdapter() {
+            @Override public void windowClosing(WindowEvent e) {
+                controller.encerrarPartida();
+            }
+        });
 
         pack();
         Dimension max = new Dimension(1280, 800);
