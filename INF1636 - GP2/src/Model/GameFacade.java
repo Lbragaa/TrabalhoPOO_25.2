@@ -218,12 +218,12 @@ public final class GameFacade implements GameSubject {
             banco.getConta().paga(j.getConta(), 200);
             for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, 200, "Lucros ou dividendos: +200");
         } else if (tabuleiro.isCasaImpostoRenda(celula)) {
-            boolean pagou = j.getConta().paga(banco.getConta(), 4000); // TEMP: valor elevado para testes de falência
+            boolean pagou = j.getConta().paga(banco.getConta(), 200); // TEMP: valor elevado para testes de falência
             if (!pagou) {
                 j.setFalido(true);
                 motor.verificarFalencia(j);
             }
-            for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, -4000, "Imposto de renda: -2000 (teste)");
+            for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, -200, "Imposto de renda: -200 (teste)");
         }
     }
 
