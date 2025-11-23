@@ -264,6 +264,18 @@ public class UIController implements GameObserver {
     }
 
     @Override
+    public void onReleaseCardUsed(int indiceJogador) {
+        int celulaPrisao = 10;
+        property.showForCell(
+                celulaPrisao, false, null,
+                "Carta de liberação usada",
+                ui.getNome(indiceJogador) + " usou a carta e saiu da prisão automaticamente."
+        );
+        refreshHud(game.getIndiceJogadorDaVez());
+        board.repaint();
+    }
+
+    @Override
     public void onChanceCard(int indiceJogador, int celula, int numero, String tipo, int valor) {
         String detalhe;
         switch (tipo) {
