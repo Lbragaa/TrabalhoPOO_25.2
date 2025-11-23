@@ -5,9 +5,11 @@ import Model.GameObserver;
 import infra.UiState;
 import infra.ImageStore;
 import view.*;
+import view.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +25,10 @@ public class UIController implements GameObserver {
     private final UiState ui;
     private final PropertyPanel property;
     private final PlayerHudPanel hud;
-    private final GameFacade game;
+    private GameFacade game;
     /** Marca se a prisão foi disparada por carta de Sorte/Revés para não sobrescrever a carta na lateral. */
     private boolean jailTriggeredByChanceCard = false;
+    private boolean saveEnabled = true;
 
     public UIController(BoardPanel board, DicePanel dice, UiState ui,
                         PropertyPanel property, PlayerHudPanel hud,
@@ -41,12 +44,18 @@ public class UIController implements GameObserver {
     private void wire() {
         dice.rollButton().addActionListener(e -> {
             int v1 = dice.forcedD1(), v2 = dice.forcedD2();
-            game.rolarDadosForcado(v1, v2);
+            jogarTurno(v1, v2);
         });
-        dice.randomButton().addActionListener(e -> game.rolarDadosAleatorio());
+        dice.randomButton().addActionListener(e -> {
+            List<Integer> dados = game.sortearDados();
+            jogarTurno(dados.get(0), dados.get(1));
+        });
 
         hud.viewPropsButton().addActionListener(e -> showOwnedPropertiesDialog());
         hud.endGameButton().addActionListener(e -> encerrarPartida());
+        hud.saveButton().addActionListener(e -> salvarPartida());
+        hud.loadButton().addActionListener(e -> carregarPartida());
+        setSaveEnabled(true);
     }
 
     private void showOwnedPropertiesDialog() {
@@ -123,6 +132,7 @@ public class UIController implements GameObserver {
     @Override public void onDice(int d1, int d2) {
         dice.setForced(d1, d2);
         dice.setFaces(d1, d2);
+        setSaveEnabled(false); // jogada começou
     }
 
     @Override public void onMoved(int indiceJogador, int celulaOrigem, int celulaDestino) {
@@ -177,6 +187,7 @@ public class UIController implements GameObserver {
     @Override public void onTurnChanged(int currentPlayerIndex) {
         ui.setJogadorDaVez(currentPlayerIndex);
         refreshHud(currentPlayerIndex);
+        setSaveEnabled(true); // novo turno: pode salvar antes de agir
         board.repaint();
     }
 
@@ -320,17 +331,100 @@ public class UIController implements GameObserver {
         board.repaint();
     }
 
+    private void setSaveEnabled(boolean enabled) {
+        saveEnabled = enabled;
+        hud.saveButton().setEnabled(enabled);
+    }
+
+    private void salvarPartida() {
+        if (!saveEnabled) return;
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Salvar partida");
+        chooser.setFileFilter(new FileNameExtensionFilter("Texto (.txt)", "txt"));
+        int opt = chooser.showSaveDialog(board);
+        if (opt == JFileChooser.APPROVE_OPTION) {
+            java.io.File file = chooser.getSelectedFile();
+            if (!file.getName().toLowerCase().endsWith(".txt")) {
+                file = new java.io.File(file.getAbsolutePath() + ".txt");
+            }
+            try {
+                game.salvarParaArquivo(file, coletarCores());
+                JOptionPane.showMessageDialog(board, "Partida salva em:\n" + file.getAbsolutePath(),
+                        "Salvar", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(board, "Erro ao salvar: " + ex.getMessage(),
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void carregarPartida() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Carregar partida");
+        chooser.setFileFilter(new FileNameExtensionFilter("Texto (.txt)", "txt"));
+        int opt = chooser.showOpenDialog(board);
+        if (opt == JFileChooser.APPROVE_OPTION) {
+            java.io.File file = chooser.getSelectedFile();
+            try {
+                var snap = GameFacade.carregarSnapshot(file);
+                // abre nova janela com o snapshot carregado
+                java.awt.Window win = SwingUtilities.getWindowAncestor(board);
+                new MainFrame(snap).setVisible(true);
+                if (win != null) win.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(board, "Erro ao carregar: " + ex.getMessage(),
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private Color[] coletarCores() {
+        int n = ui.getNumJogadores();
+        Color[] cores = new Color[n];
+        for (int i = 0; i < n; i++) cores[i] = ui.getCor(i);
+        return cores;
+    }
+
+    /** Orquestra a sequência completa de uma jogada (Controller). */
+    private void jogarTurno(int d1, int d2) {
+        setSaveEnabled(false);
+        int idx = game.getIndiceJogadorDaVez();
+
+        game.notificarRolagem(d1, d2);
+
+        // Prisão: tenta sair com dupla
+        if (game.jogadorEstaPreso(idx)) {
+            boolean liberado = game.tentarLiberarComDupla(idx, d1, d2);
+            game.notificarEstado();
+            if (!liberado) { game.avancarTurnoENotificar(); return; }
+        }
+
+        game.moverJogadorComDados(idx, d1, d2);
+        game.aplicarCasasEspeciais(idx);
+        game.cobrarAluguelSeNecessario(idx);
+        game.resolverChanceSeNecessario(idx);
+
+        game.notificarEstado();
+        game.usarCartaLiberacaoAutomatica(idx);
+        game.notificarEstado();
+        game.avancarTurnoENotificar();
+    }
+
     @Override
     public void onGameEnded(int winnerIndex, int[] capitaisPorJogador) {
-        // Lista capitais
+        // Ordena por capital desc para exibição
+        List<Integer> ordem = new ArrayList<>();
+        for (int i = 0; i < capitaisPorJogador.length; i++) ordem.add(i);
+        ordem.sort((a, b) -> Integer.compare(capitaisPorJogador[b], capitaisPorJogador[a]));
+
         StringBuilder sb = new StringBuilder();
         int max = Integer.MIN_VALUE;
         for (int cap : capitaisPorJogador) if (cap > max) max = cap;
 
         List<String> vencedores = new ArrayList<>();
-        for (int i = 0; i < capitaisPorJogador.length; i++) {
-            sb.append(ui.getNome(i)).append(": R$ ").append(capitaisPorJogador[i]).append("\n");
-            if (capitaisPorJogador[i] == max) vencedores.add(ui.getNome(i));
+        for (int idx : ordem) {
+            sb.append(ui.getNome(idx)).append(": R$ ").append(capitaisPorJogador[idx]).append("\n");
+            if (capitaisPorJogador[idx] == max) vencedores.add(ui.getNome(idx));
         }
 
         String msg = "Capitais apurados:\n\n" + sb +

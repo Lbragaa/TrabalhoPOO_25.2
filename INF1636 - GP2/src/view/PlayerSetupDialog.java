@@ -1,6 +1,8 @@
 package view;
 
 import infra.ImageStore;
+import Model.GameStateSnapshot;
+import Model.GameFacade;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,6 +45,7 @@ public class PlayerSetupDialog extends JDialog {
     private Color[] coresEscolhidas;
     private String[] nomesEscolhidos;
     private int[] ordemSorteada;
+    private GameStateSnapshot snapshotCarregado;
 
     public PlayerSetupDialog(Window owner) {
         super(owner, "Configurar Partida", ModalityType.APPLICATION_MODAL);
@@ -74,13 +77,20 @@ public class PlayerSetupDialog extends JDialog {
         p.add(new JLabel("Jogadores (3 a 6):"), gbc(0,0));
         p.add(spnPlayers, gbc(1,0));
 
+        JButton load = new JButton("Carregar partida...");
+        load.addActionListener(e -> onCarregarSnapshot());
+
         JButton next = new JButton("Continuar");
         next.addActionListener(e -> {
             numJogadores = (Integer) spnPlayers.getValue();
             buildPlayersUi(numJogadores);
             cards.show(cardPanel, "players");
         });
-        p.add(next, gbcSpan(0,1,2,1, GridBagConstraints.EAST));
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttons.setOpaque(false);
+        buttons.add(load);
+        buttons.add(next);
+        p.add(buttons, gbcSpan(0,1,2,1, GridBagConstraints.EAST));
         cardPanel.add(p, "count");
     }
 
@@ -189,10 +199,32 @@ public class PlayerSetupDialog extends JDialog {
     public Color[] getCoresEscolhidas(){ return coresEscolhidas; }
     public String[] getNomesEscolhidos(){ return nomesEscolhidos; }
     public int[] getOrdemSorteada()    { return ordemSorteada; }
+    public GameStateSnapshot getSnapshotCarregado() { return snapshotCarregado; }
 
     // ---- helpers UI ----
     private void showMsg(String s) {
         JOptionPane.showMessageDialog(this, s, "Atenção", JOptionPane.WARNING_MESSAGE);
+    }
+    private void onCarregarSnapshot() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Carregar partida");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Texto (.txt)", "txt"));
+        int opt = chooser.showOpenDialog(this);
+        if (opt == JFileChooser.APPROVE_OPTION) {
+            try {
+                snapshotCarregado = GameFacade.carregarSnapshot(chooser.getSelectedFile());
+                // Preenche dados a partir do snapshot
+                int n = snapshotCarregado.players().size();
+                numJogadores = n;
+                nomesEscolhidos = snapshotCarregado.players().stream().map(GameStateSnapshot.PlayerData::nome).toArray(String[]::new);
+                coresEscolhidas = snapshotCarregado.players().stream().map(GameStateSnapshot.PlayerData::cor).toArray(Color[]::new);
+                ordemSorteada = snapshotCarregado.ordem();
+                confirmed = true;
+                dispose();
+            } catch (Exception ex) {
+                showMsg("Erro ao carregar partida: " + ex.getMessage());
+            }
+        }
     }
     private static GridBagConstraints gbc(int x, int y) {
         GridBagConstraints c = new GridBagConstraints();

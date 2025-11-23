@@ -1,5 +1,6 @@
 package Model;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -182,12 +183,97 @@ public final class GameFacade implements GameSubject {
         return false;
     }
 
-    // ---------- Ações ----------
-    public void rolarDadosAleatorio() {
-        List<Integer> dados = motor.lancarDados();
-        processarRolagem(dados.get(0), dados.get(1));
+    // ---------- Ações atômicas para o Controller orquestrar ----------
+    /** Sorteia dois dados (1..6) e retorna lista [d1,d2]. */
+    public List<Integer> sortearDados() { return motor.lancarDados(); }
+
+    /** Notifica rolagem aos observadores. */
+    public void notificarRolagem(int d1, int d2) {
+        for (GameObserver o : observadores) o.onDice(d1, d2);
     }
-    public void rolarDadosForcado(int d1, int d2) { processarRolagem(d1, d2); }
+
+    /** Tenta liberar da prisão caso seja dupla; retorna true se liberou. */
+    public boolean tentarLiberarComDupla(int indiceJogador, int d1, int d2) {
+        return motor.soltarSeDupla(jogadores.get(indiceJogador), Arrays.asList(d1, d2));
+    }
+
+    /** Move o jogador pelos dados e notifica movimento. */
+    public void moverJogadorComDados(int indiceJogador, int d1, int d2) {
+        Jogador j = jogadores.get(indiceJogador);
+        int origem = j.getPosicao();
+        motor.moverJogador(j, Arrays.asList(d1, d2));
+        int destino = j.getPosicao();
+        for (GameObserver o : observadores) o.onMoved(indiceJogador, origem, destino);
+    }
+
+    /** Aplica casas especiais fixas (lucros/dividendos e IR) e notifica. */
+    public void aplicarCasasEspeciais(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        int celula = j.getPosicao();
+        if (tabuleiro.isCasaLucrosDividendos(celula)) {
+            banco.getConta().paga(j.getConta(), 200);
+            for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, 200, "Lucros ou dividendos: +200");
+        } else if (tabuleiro.isCasaImpostoRenda(celula)) {
+            j.getConta().paga(banco.getConta(), 200);
+            for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, -200, "Imposto de renda: -200");
+        }
+    }
+
+    /** Cobra aluguel se aplicável; notifica via onRentPaid e retorna valor pago. */
+    public int cobrarAluguelSeNecessario(int indicePagador) {
+        Jogador pagador = jogadores.get(indicePagador);
+        Propriedade prop = tabuleiro.getPropriedadeNaPosicao(pagador.getPosicao());
+        if (prop == null) return 0;
+        Jogador dono = prop.getProprietario();
+        if (dono == null || dono == pagador) return 0;
+        int saldoAntes = pagador.getConta().getSaldo();
+        motor.pagarAluguel(pagador, prop);
+        int valorPago = Math.max(0, saldoAntes - pagador.getConta().getSaldo());
+        if (valorPago > 0) {
+            int indiceDono = indexOf(dono);
+            if (indiceDono >= 0) {
+                for (GameObserver o : observadores) o.onRentPaid(indicePagador, indiceDono, pagador.getPosicao(), valorPago);
+            }
+        }
+        return valorPago;
+    }
+
+    /** Resolve carta se estiver em casa de Sorte/Revés; aplica e notifica. Retorna carta ou null. */
+    public Carta resolverChanceSeNecessario(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        int celula = j.getPosicao();
+        if (!tabuleiro.isChanceCell(celula)) return null;
+        Carta c = motor.puxarSorteReves(j);
+        for (GameObserver o : observadores) {
+            o.onChanceCard(indiceJogador, celula, c.codigo, c.tipo.name(), c.valor);
+        }
+        return c;
+    }
+
+    /** Usa carta de liberação automática se houver (já notifica onReleaseCardUsed). */
+    public void usarCartaLiberacaoAutomatica(int indiceJogador) {
+        Jogador j = jogadores.get(indiceJogador);
+        if (!j.estaPreso() || j.getCartasLiberacao() <= 0) return;
+        boolean usou = motor.usarCartaLiberacao(j);
+        if (usou) for (GameObserver o : observadores) o.onReleaseCardUsed(indiceJogador);
+    }
+
+    /** Notifica diffs de estado (saldo/preso/falido). */
+    public void notificarEstado() { detectarENotificarEstadoGlobal(); }
+
+    /** Avança turno e notifica. */
+    public void avancarTurnoENotificar() { avancarVezENotificar(); }
+
+    // ---------- Persistência ----------
+    public void salvarParaArquivo(java.io.File arquivo, Color[] coresJogadores) throws java.io.IOException {
+        GameStateIO.salvar(snapshot(coresJogadores), arquivo);
+    }
+    public static GameStateSnapshot carregarSnapshot(java.io.File arquivo) throws java.io.IOException {
+        return GameStateIO.carregar(arquivo);
+    }
+    public static GameFacade initFromSnapshot(GameStateSnapshot snap) {
+        return carregarDeSnapshot(snap);
+    }
 
     public void comprarPropriedade(int indiceJogador, int posicao) {
         int celula = norm40(posicao);
@@ -262,79 +348,6 @@ public final class GameFacade implements GameSubject {
         return jogadores.size();
     }
 
-    private void processarRolagem(int d1, int d2) {
-        for (GameObserver o : observadores) o.onDice(d1, d2);
-
-        int indiceJogadorDaVez = getIndiceJogadorDaVez();
-        Jogador jogadorDaVez = jogadores.get(indiceJogadorDaVez);
-        int celulaOrigem = jogadorDaVez.getPosicao();
-
-        if (jogadorDaVez.estaPreso()) {
-            boolean liberado = motor.soltarSeDupla(jogadorDaVez, Arrays.asList(d1, d2));
-            detectarENotificarEstadoGlobal();
-            if (!liberado) {
-                avancarVezENotificar();
-                return;
-            }
-        }
-
-        motor.moverJogador(jogadorDaVez, Arrays.asList(d1, d2));
-        int celulaDestino = jogadorDaVez.getPosicao();
-
-        for (GameObserver o : observadores) o.onMoved(indiceJogadorDaVez, celulaOrigem, celulaDestino);
-
-        // Casas especiais fixas (lucros/dividendos e IR)
-        if (tabuleiro.isCasaLucrosDividendos(celulaDestino)) {
-            banco.getConta().paga(jogadorDaVez.getConta(), 200);
-            for (GameObserver o : observadores) {
-                o.onSpecialCell(indiceJogadorDaVez, celulaDestino, 200, "Lucros ou dividendos: +200");
-            }
-        } else if (tabuleiro.isCasaImpostoRenda(celulaDestino)) {
-            jogadorDaVez.getConta().paga(banco.getConta(), 200);
-            for (GameObserver o : observadores) {
-                o.onSpecialCell(indiceJogadorDaVez, celulaDestino, -200, "Imposto de renda: -200");
-            }
-        }
-
-        // Aluguel se for propriedade
-        Propriedade propriedadeAtual = tabuleiro.getPropriedadeNaPosicao(celulaDestino);
-        if (propriedadeAtual != null) {
-            Jogador donoDaPropriedade = propriedadeAtual.getProprietario();
-            if (donoDaPropriedade != null && donoDaPropriedade != jogadorDaVez) {
-                int saldoAntesPagante = jogadorDaVez.getConta().getSaldo();
-                motor.pagarAluguel(jogadorDaVez, propriedadeAtual);
-                int saldoDepoisPagante = jogadorDaVez.getConta().getSaldo();
-                int valorPago = Math.max(0, saldoAntesPagante - saldoDepoisPagante);
-                if (valorPago > 0) {
-                    int indiceDono = indexOf(donoDaPropriedade);
-                    if (indiceDono >= 0) {
-                        for (GameObserver o : observadores) {
-                            o.onRentPaid(indiceJogadorDaVez, indiceDono, celulaDestino, valorPago);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Sorte/Revés: puxa carta real, aplica e notifica número/imagem
-        if (tabuleiro.isChanceCell(celulaDestino)) {
-            Carta c = motor.puxarSorteReves(jogadorDaVez);
-            for (GameObserver o : observadores) {
-                o.onChanceCard(indiceJogadorDaVez, celulaDestino, c.codigo, c.tipo.name(), c.valor);
-            }
-        }
-
-        // Primeiro notifica status atual (ex.: prisão) para a UI reagir (popup de prisão)
-        detectarENotificarEstadoGlobal();
-
-        // Se foi preso (casa 30 ou carta) e possui carta de liberação, usa após o popup de prisão
-        tentarUsarCartaLiberacaoAutomatica(jogadorDaVez, indiceJogadorDaVez);
-
-        // Notifica novamente para refletir estado após possível liberação
-        detectarENotificarEstadoGlobal();
-        avancarVezENotificar();
-    }
-
     private int indexOf(Jogador j) {
         for (int i = 0; i < jogadores.size(); i++) if (jogadores.get(i) == j) return i;
         return -1;
@@ -347,6 +360,90 @@ public final class GameFacade implements GameSubject {
     }
 
     private static int norm40(int v) { return ((v % 40) + 40) % 40; }
+
+    // ---------- Suporte a salvar/carregar ----------
+    GameStateSnapshot snapshot(Color[] coresJogadores) {
+        List<GameStateSnapshot.PlayerData> players = new ArrayList<>();
+        for (int i = 0; i < jogadores.size(); i++) {
+            Jogador j = jogadores.get(i);
+            Color cor = (coresJogadores != null && i < coresJogadores.length && coresJogadores[i] != null)
+                    ? coresJogadores[i] : Color.GRAY;
+            players.add(new GameStateSnapshot.PlayerData(
+                    j.getNome(), cor, j.getConta().getSaldo(), j.getPosicao(),
+                    j.estaPreso(), j.isFalido(), j.getCartasLiberacao()
+            ));
+        }
+        List<GameStateSnapshot.PropertyData> props = new ArrayList<>();
+        for (int pos = 0; pos < 40; pos++) {
+            Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
+            if (p == null) continue;
+            int owner = -1;
+            if (p.getProprietario() != null) owner = jogadores.indexOf(p.getProprietario());
+            int casas = (p instanceof Terreno t) ? t.getNumCasas() : 0;
+            int hotel = (p instanceof Terreno t && t.temHotel()) ? 1 : 0;
+            props.add(new GameStateSnapshot.PropertyData(pos, owner, casas, hotel));
+        }
+        List<Carta> deck = new ArrayList<>(tabuleiro.baralhoSorteReves);
+        return new GameStateSnapshot(banco.getSaldo(), ordem.clone(), ponteiroDaVez, players, props, deck);
+    }
+
+    static GameFacade carregarDeSnapshot(GameStateSnapshot snap) {
+        String[] nomes = snap.players().stream().map(GameStateSnapshot.PlayerData::nome).toArray(String[]::new);
+        GameFacade gf = new GameFacade(nomes, snap.ordem());
+        INSTANCIA = gf;
+
+        gf.banco.setSaldo(snap.bancoSaldo());
+        gf.ponteiroDaVez = ((snap.ponteiro() % gf.ordem.length) + gf.ordem.length) % gf.ordem.length;
+
+        for (int i = 0; i < gf.jogadores.size(); i++) {
+            GameStateSnapshot.PlayerData p = snap.players().get(i);
+            Jogador j = gf.jogadores.get(i);
+            j.setSaldo(p.saldo());
+            j.setPosicao(p.posicao());
+            j.setPreso(p.preso());
+            j.setFalido(p.falido());
+            j.setCartasLiberacao(p.cartasLiberacao());
+            if (p.falido()) gf.tabuleiro.removerJogador(j);
+        }
+
+        for (GameStateSnapshot.PropertyData pd : snap.propriedades()) {
+            Propriedade p = gf.tabuleiro.getPropriedadeNaPosicao(pd.posicao());
+            if (p == null) continue;
+            if (pd.ownerIndex() >= 0 && pd.ownerIndex() < gf.jogadores.size()) {
+                p.setProprietario(gf.jogadores.get(pd.ownerIndex()));
+            }
+            if (p instanceof Terreno t) {
+                t.resetConstrucoes();
+                for (int i = 0; i < pd.casas(); i++) t.adicionaCasa();
+                if (pd.hotel() == 1) t.adicionaCasa();
+            }
+        }
+
+        gf.tabuleiro.baralhoSorteReves.clear();
+        gf.tabuleiro.baralhoSorteReves.addAll(snap.deck());
+
+        gf.recalcularDiffs();
+        return gf;
+    }
+
+    /* package */ List<Jogador> getJogadores() { return jogadores; }
+    /* package */ Tabuleiro getTabuleiro() { return tabuleiro; }
+    /* package */ Banco getBanco() { return banco; }
+    /* package */ int[] getOrdem() { return ordem; }
+    /* package */ int getPonteiro() { return ponteiroDaVez; }
+    /* package */ void setPonteiro(int p) { this.ponteiroDaVez = ((p % ordem.length) + ordem.length) % ordem.length; }
+    /* package */ List<GameObserver> getObservadores() { return observadores; }
+    /* package */ void recalcularDiffs() {
+        int n = jogadores.size();
+        saldoAnterior  = new int[n];
+        presoAnterior  = new boolean[n];
+        falidoAnterior = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            saldoAnterior[i]  = jogadores.get(i).getConta().getSaldo();
+            presoAnterior[i]  = jogadores.get(i).estaPreso();
+            falidoAnterior[i] = jogadores.get(i).isFalido();
+        }
+    }
 
     // ---------- Cadastro das propriedades ----------
     private void cadastrarPropriedadesPadrao() {

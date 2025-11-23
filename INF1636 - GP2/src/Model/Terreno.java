@@ -53,4 +53,5 @@ class Terreno extends Propriedade {
     // --------- GETTERS ---------
     public int getValorCasa() { return (int)(preco * 0.50); } // casa custa 50% do preço
     public int getValorHotel() { return preco; } // hotel custa 100% do preço
+    void resetConstrucoes() { this.numCasas = 0; this.temHotel = false; }
 }

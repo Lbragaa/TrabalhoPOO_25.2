@@ -65,6 +65,11 @@ class Jogador {
     public boolean isFalido() { return falido; }
     public String getNome() { return nome; }
 
+    // --------- Suporte a carregamento ---------
+    void setSaldo(int saldo) { this.conta = new ContaBancaria(saldo); }
+    void setPreso(boolean preso) { this.preso = preso; }
+    void setCartasLiberacao(int qtd) { this.cartasLiberacao = Math.max(0, qtd); }
+
     // --------- OUTROS ---------
 
     /** Paga valor ao banco. */

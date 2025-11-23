@@ -11,30 +11,43 @@ import java.awt.event.WindowEvent;
 
 /** Janela principal: monta a UI, inicializa GameFacade e conecta o UIController. */
 public class MainFrame extends JFrame {
-    public MainFrame() {
+    public MainFrame() { this(null); }
+
+    public MainFrame(Model.GameStateSnapshot snapCarregado) {
         super("Banco Imobiliário — Iteração 2");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1120, 720));
         setLocationRelativeTo(null);
 
-        PlayerSetupDialog dlg = new PlayerSetupDialog(this);
-        dlg.setVisible(true);
-        if (!dlg.isConfirmed()) { dispose(); return; }
+        PlayerSetupDialog dlg = null;
+        if (snapCarregado == null) {
+            dlg = new PlayerSetupDialog(this);
+            dlg.setVisible(true);
+            if (!dlg.isConfirmed()) { dispose(); return; }
+            snapCarregado = dlg.getSnapshotCarregado();
+        }
 
-        int     n      = dlg.getNumJogadores();
-        Color[] cores  = dlg.getCoresEscolhidas();
-        String[] nomes = dlg.getNomesEscolhidos();
-        int[]   ordem  = dlg.getOrdemSorteada();
-
-        UiState ui = new UiState(n, cores, nomes, ordem);
+        GameFacade game;
+        UiState ui;
+        if (snapCarregado != null) {
+            String[] nomes = snapCarregado.players().stream().map(p -> p.nome()).toArray(String[]::new);
+            Color[] cores  = snapCarregado.players().stream().map(p -> p.cor()).toArray(Color[]::new);
+            int[] ordem    = snapCarregado.ordem();
+            ui = new UiState(nomes.length, cores, nomes, ordem);
+            game = GameFacade.initFromSnapshot(snapCarregado);
+        } else {
+            int     n      = dlg.getNumJogadores();
+            Color[] cores  = dlg.getCoresEscolhidas();
+            String[] nomes = dlg.getNomesEscolhidos();
+            int[]   ordem  = dlg.getOrdemSorteada();
+            ui = new UiState(n, cores, nomes, ordem);
+            game = GameFacade.init(nomes, ordem);
+        }
 
         PropertyPanel property = new PropertyPanel();
         BoardPanel board = new BoardPanel(ui);
         PlayerHudPanel hud = new PlayerHudPanel();
         DicePanel dice = new DicePanel();
-
-        // Façade (Singleton)
-        GameFacade game = GameFacade.init(nomes, ordem);
 
         JPanel root = new JPanel(new BorderLayout());
         root.add(board,    BorderLayout.CENTER);
@@ -44,6 +57,13 @@ public class MainFrame extends JFrame {
         setContentPane(root);
 
         UIController controller = new UIController(board, dice, ui, property, hud, game);
+
+        // Sincroniza UI com o estado atual do jogo (posições e jogador da vez)
+        for (int i = 0; i < game.getNumeroJogadores(); i++) {
+            ui.setPos(i, game.getPosicao(i));
+        }
+        ui.setJogadorDaVez(game.getIndiceJogadorDaVez());
+        board.repaint();
 
         // Ao fechar a janela, encerra a partida (apurando vencedor) antes de sair
         addWindowListener(new WindowAdapter() {

@@ -64,4 +64,9 @@ class Banco {
     public int getSaldo() {
         return conta.getSaldo();
     }
+
+    /** Ajusta o saldo (usado em carregamento de estado). */
+    void setSaldo(int saldo) {
+        this.conta = new ContaBancaria(saldo);
+    }
 }
