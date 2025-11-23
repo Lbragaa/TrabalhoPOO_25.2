@@ -322,11 +322,19 @@ public class UIController implements GameObserver {
 
     @Override
     public void onGameEnded(int winnerIndex, int[] capitaisPorJogador) {
+        // Lista capitais
         StringBuilder sb = new StringBuilder();
+        int max = Integer.MIN_VALUE;
+        for (int cap : capitaisPorJogador) if (cap > max) max = cap;
+
+        List<String> vencedores = new ArrayList<>();
         for (int i = 0; i < capitaisPorJogador.length; i++) {
             sb.append(ui.getNome(i)).append(": R$ ").append(capitaisPorJogador[i]).append("\n");
+            if (capitaisPorJogador[i] == max) vencedores.add(ui.getNome(i));
         }
-        String msg = "Capitais apurados:\n\n" + sb + "\nVencedor: " + ui.getNome(winnerIndex);
+
+        String msg = "Capitais apurados:\n\n" + sb +
+                "\nVencedor(es): " + String.join(", ", vencedores);
         JOptionPane.showMessageDialog(board, msg, "Partida encerrada", JOptionPane.INFORMATION_MESSAGE);
         // Opcional: fechar a janela principal
         SwingUtilities.getWindowAncestor(board).dispose();
