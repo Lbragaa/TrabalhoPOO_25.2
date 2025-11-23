@@ -217,7 +217,9 @@ public class PlayerSetupDialog extends JDialog {
                 int n = snapshotCarregado.players().size();
                 numJogadores = n;
                 nomesEscolhidos = snapshotCarregado.players().stream().map(GameStateSnapshot.PlayerData::nome).toArray(String[]::new);
-                coresEscolhidas = snapshotCarregado.players().stream().map(GameStateSnapshot.PlayerData::cor).toArray(Color[]::new);
+                coresEscolhidas = snapshotCarregado.players().stream()
+                        .map(p -> colorFromIndex(p.corIndex()))
+                        .toArray(Color[]::new);
                 ordemSorteada = snapshotCarregado.ordem();
                 confirmed = true;
                 dispose();
@@ -257,6 +259,10 @@ public class PlayerSetupDialog extends JDialog {
         list.add(new ColorItem("Rosa",     Color.PINK));   // pin4
         list.add(new ColorItem("Cinza",    Color.GRAY));   // pin5
         return list;
+    }
+    private Color colorFromIndex(int idx) {
+        int i = Math.max(0, Math.min(idx, palette.size()-1));
+        return palette.get(i).color();
     }
     private static String colorName(Color c) {
         if (c == null) return "?";

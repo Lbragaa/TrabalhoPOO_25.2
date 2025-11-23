@@ -1,6 +1,5 @@
 package Model;
 
-import java.awt.Color;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -12,6 +11,22 @@ import java.util.List;
 final class GameStateIO {
     private GameStateIO() {}
 
+    // Paleta fixa alinhada aos pinos (0..5)
+    private static final java.awt.Color[] PIN_PALETTE = new java.awt.Color[] {
+            java.awt.Color.RED, java.awt.Color.BLUE, java.awt.Color.ORANGE,
+            java.awt.Color.YELLOW, java.awt.Color.PINK, java.awt.Color.GRAY
+    };
+
+    private static int colorToIndex(java.awt.Color c) {
+        if (c == null) return 0;
+        for (int i = 0; i < PIN_PALETTE.length; i++) if (PIN_PALETTE[i].equals(c)) return i;
+        return 0;
+    }
+    private static java.awt.Color indexToColor(int idx) {
+        if (idx < 0 || idx >= PIN_PALETTE.length) return PIN_PALETTE[0];
+        return PIN_PALETTE[idx];
+    }
+
     static void salvar(GameStateSnapshot snapshot, File arquivo) throws IOException {
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(arquivo), StandardCharsets.US_ASCII))) {
             out.println("BANCO=" + snapshot.bancoSaldo());
@@ -19,10 +34,9 @@ final class GameStateIO {
             out.println("PONTEIRO=" + snapshot.ponteiro());
             out.println("PLAYERS=" + snapshot.players().size());
             for (GameStateSnapshot.PlayerData p : snapshot.players()) {
-                Color c = p.cor();
                 out.println("PLAYER|" + esc(p.nome()) + "|" + p.saldo() + "|" + p.posicao() + "|" +
                         (p.preso() ? 1 : 0) + "|" + (p.falido() ? 1 : 0) + "|" + p.cartasLiberacao() + "|" +
-                        c.getRed() + "," + c.getGreen() + "," + c.getBlue());
+                        p.corIndex());
             }
             out.println("PROPS");
             for (GameStateSnapshot.PropertyData p : snapshot.propriedades()) {
@@ -62,8 +76,8 @@ final class GameStateIO {
                 boolean preso = "1".equals(p[4]);
                 boolean falido = "1".equals(p[5]);
                 int cartas = Integer.parseInt(p[6]);
-                Color cor = parseColor(p[7]);
-                players.add(new GameStateSnapshot.PlayerData(nome, cor, saldo, pos, preso, falido, cartas));
+                int corIndex = Integer.parseInt(p[7]);
+                players.add(new GameStateSnapshot.PlayerData(nome, corIndex, saldo, pos, preso, falido, cartas));
             }
         }
         while (it.hasNext()) {
@@ -105,14 +119,6 @@ final class GameStateIO {
         int[] out = new int[parts.length];
         for (int i = 0; i < parts.length; i++) out[i] = Integer.parseInt(parts[i].trim());
         return out;
-    }
-
-    private static Color parseColor(String rgb) {
-        String[] parts = rgb.split(",");
-        int r = Integer.parseInt(parts[0]);
-        int g = Integer.parseInt(parts[1]);
-        int b = Integer.parseInt(parts[2]);
-        return new Color(r, g, b);
     }
 
     private static String esc(String s) {

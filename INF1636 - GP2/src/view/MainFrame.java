@@ -31,7 +31,9 @@ public class MainFrame extends JFrame {
         UiState ui;
         if (snapCarregado != null) {
             String[] nomes = snapCarregado.players().stream().map(p -> p.nome()).toArray(String[]::new);
-            Color[] cores  = snapCarregado.players().stream().map(p -> p.cor()).toArray(Color[]::new);
+            Color[] cores  = snapCarregado.players().stream()
+                    .map(p -> UiState.PIN_PALETTE[Math.max(0, Math.min(p.corIndex(), UiState.PIN_PALETTE.length-1))])
+                    .toArray(Color[]::new);
             int[] ordem    = snapCarregado.ordem();
             ui = new UiState(nomes.length, cores, nomes, ordem);
             // Desativa visualmente jogadores falidos do snapshot

@@ -37,6 +37,11 @@ public final class GameFacade implements GameSubject {
     private boolean[] presoAnterior;
     private boolean[] falidoAnterior;
 
+    /** Paleta fixa de cores de pino (alinhada ao save). */
+    private static final Color[] PIN_PALETTE = new Color[] {
+            Color.RED, Color.BLUE, Color.ORANGE, Color.YELLOW, Color.PINK, Color.GRAY
+    };
+
     // Construtor privado
     private GameFacade(String[] nomes, int[] ordemSorteada) {
         this.banco = new Banco();
@@ -427,8 +432,9 @@ public int getValorCasaAqui(int indiceJogador) {
             Jogador j = jogadores.get(i);
             Color cor = (coresJogadores != null && i < coresJogadores.length && coresJogadores[i] != null)
                     ? coresJogadores[i] : Color.GRAY;
+            int corIndex = colorToIndex(cor);
             players.add(new GameStateSnapshot.PlayerData(
-                    j.getNome(), cor, j.getConta().getSaldo(), j.getPosicao(),
+                    j.getNome(), corIndex, j.getConta().getSaldo(), j.getPosicao(),
                     j.estaPreso(), j.isFalido(), j.getCartasLiberacao()
             ));
         }
@@ -614,5 +620,12 @@ public int getValorCasaAqui(int indiceJogador) {
             }
         }
         return total;
+    }
+
+    /** Mapeia cor para o índice de pino (0..5) usado no save. */
+    private static int colorToIndex(Color c) {
+        if (c == null) return 0;
+        for (int i = 0; i < PIN_PALETTE.length; i++) if (PIN_PALETTE[i].equals(c)) return i;
+        return 0;
     }
 }
