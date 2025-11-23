@@ -13,7 +13,7 @@ Formato do arquivo de salvamento (texto ASCII):
   BANCO=<saldo_do_banco> 
   ORDEM=<índices separados por vírgula> ; ordem dos jogadores na rodada
   PONTEIRO=<índice_atual_na_ORDEM>  ; ponteiro do turno (mod tamanho da ORDEM)
-  PLAYERS=<quantidade_de_jogadores> ; deve bater com o número de linhas PLAYER a segui
+  PLAYERS=<quantidade_de_jogadores> ; deve bater com o número de linhas PLAYER a seguir
 
 - Bloco de jogadores:
 Uma linha por jogador na mesma ordem do cadastro:
