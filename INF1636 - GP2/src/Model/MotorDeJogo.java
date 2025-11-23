@@ -134,10 +134,14 @@ public class MotorDeJogo {
         switch (c.tipo) {
             case VAI_PARA_PRISAO -> j.prende();
             case SAIDA_LIVRE     -> j.adicionarCartaLiberacao();
-            case PAGAR           -> { j.getConta().paga(banco.getConta(), c.valor); verificarFalencia(j); }
+            case PAGAR           -> {
+                boolean pagou = j.getConta().paga(banco.getConta(), c.valor);
+                if (!pagou) j.setFalido(true);
+                verificarFalencia(j);
+            }
             case RECEBER         -> banco.getConta().paga(j.getConta(), c.valor);
             case RECEBER_DE_CADA -> {
-                for (Jogador outro : tabuleiro.getJogadoresAtivos()) {
+                for (Jogador outro : new ArrayList<>(tabuleiro.getJogadoresAtivos())) {
                     if (outro == j) continue;
                     boolean ok = outro.getConta().paga(j.getConta(), c.valor);
                     if (!ok) { outro.setFalido(true); verificarFalencia(outro); }
