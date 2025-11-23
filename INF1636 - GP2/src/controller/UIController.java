@@ -46,6 +46,7 @@ public class UIController implements GameObserver {
         dice.randomButton().addActionListener(e -> game.rolarDadosAleatorio());
 
         hud.viewPropsButton().addActionListener(e -> showOwnedPropertiesDialog());
+        hud.endGameButton().addActionListener(e -> encerrarPartida());
     }
 
     private void showOwnedPropertiesDialog() {
@@ -317,6 +318,23 @@ public class UIController implements GameObserver {
         }
         refreshHud(game.getIndiceJogadorDaVez());
         board.repaint();
+    }
+
+    @Override
+    public void onGameEnded(int winnerIndex, int[] capitaisPorJogador) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < capitaisPorJogador.length; i++) {
+            sb.append(ui.getNome(i)).append(": R$ ").append(capitaisPorJogador[i]).append("\n");
+        }
+        String msg = "Capitais apurados:\n\n" + sb + "\nVencedor: " + ui.getNome(winnerIndex);
+        JOptionPane.showMessageDialog(board, msg, "Partida encerrada", JOptionPane.INFORMATION_MESSAGE);
+        // Opcional: fechar a janela principal
+        SwingUtilities.getWindowAncestor(board).dispose();
+    }
+
+    /** Encerrar partida via botão/menu ou fechamento da janela. */
+    public void encerrarPartida() {
+        game.encerrarPartida();
     }
 
     private void refreshHud(int indiceJogador) {
