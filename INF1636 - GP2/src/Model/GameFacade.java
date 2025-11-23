@@ -525,7 +525,7 @@ public int getValorCasaAqui(int indiceJogador) {
         tabuleiro.addPropriedade(new Terreno("Botafogo",                   100, 50, 10, 23));
         tabuleiro.addPropriedade(new Companhia("Companhia de Navegação",   150, 1, 25,  25));
         tabuleiro.addPropriedade(new Terreno("Av. Brasil",                 160, 80, 16, 26));
-        tabuleiro.addPropriedade(new Terreno("Av. Paulista",               140, 70, 14, 27));
+        tabuleiro.addPropriedade(new Terreno("Av. Paulista",               140, 70, 14, 28));
         tabuleiro.addPropriedade(new Terreno("Jardim Europa",              140, 70, 14, 29));
         tabuleiro.addPropriedade(new Terreno("Copacabana",                 260,130, 26, 31));
         tabuleiro.addPropriedade(new Companhia("Companhia de Aviação",     200, 1, 28,  32));
