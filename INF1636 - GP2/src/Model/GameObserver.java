@@ -43,4 +43,7 @@ public interface GameObserver {
 
     /** Notifica uso de carta de liberação automática (saiu da prisão). */
     default void onReleaseCardUsed(int playerIndex) {}
+
+    /** Notifica término da partida: vencedor e capital de cada jogador. */
+    default void onGameEnded(int winnerIndex, int[] capitaisPorJogador) {}
 }
