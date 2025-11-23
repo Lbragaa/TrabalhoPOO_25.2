@@ -40,7 +40,7 @@ Uma linha por jogador na mesma ordem do cadastro:
     • TIPO: VAI_PARA_PRISAO, SAIDA_LIVRE, PAGAR, RECEBER, RECEBER_DE_CADA
     • valor: inteiro (0 para prisão/saída livre)
     • codigo: número da carta (1..30) que corresponde ao arquivo PNG
-  Regra: cartas não-SAIDA_LIVRE retornam ao fim da fila após compradas; 
+  Regras especificas: cartas não-SAIDA_LIVRE retornam ao fim da fila após compradas; SAIDA_LIVRE fica com o jogador e só volta ao deck quando usada
 
 Lista de cartas padrão (codigo, TIPO, valor):
 01: RECEBER 25
