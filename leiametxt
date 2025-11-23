@@ -17,14 +17,18 @@ Formato do arquivo de salvamento (texto ASCII):
 
 - Bloco de jogadores:
 Uma linha por jogador na mesma ordem do cadastro:
-  PLAYER|nome|saldo|posicao|preso(0/1)|falido(0/1)|cartasSaidaLivre|R,G,B
+  PLAYER|nome|saldo|posicao|preso(0/1)|falido(0/1)|cartasSaidaLivre|Cor
     • nome: texto sem “|”
     • saldo: inteiro
     • posicao: 0..39
     • preso: 1 se estiver preso, 0 caso contrário
     • falido: 1 se estiver falido (removido do tabuleiro ao carregar), 0 caso contrário
     • cartasSaidaLivre: quantidade de cartas de saída da prisão que o jogador possui
-    • R,G,B: cor do jogador (0..255 cada)
+    • Cor: índice da cor do jogador (0..5)
+    
+    As cores são: 0 Vermelho, 1 Azul, 2 Laranja, 3 Amarelo, 4 Rosa, 5 Cinza.
+
+
 
 - Bloco de propriedades:
   PROPS
@@ -40,7 +44,7 @@ Uma linha por jogador na mesma ordem do cadastro:
     • TIPO: VAI_PARA_PRISAO, SAIDA_LIVRE, PAGAR, RECEBER, RECEBER_DE_CADA
     • valor: inteiro (0 para prisão/saída livre)
     • codigo: número da carta (1..30) que corresponde ao arquivo PNG
-  Regras especificas: cartas não-SAIDA_LIVRE retornam ao fim da fila após compradas; SAIDA_LIVRE fica com o jogador e só volta ao deck quando usada
+Regras especificas: cartas não-SAIDA_LIVRE retornam ao fim da fila após compradas; SAIDA_LIVRE fica com o jogador e só volta ao deck quando usada
 
 Lista de cartas padrão (codigo, TIPO, valor):
 01: RECEBER 25
@@ -79,9 +83,9 @@ BANCO=200000
 ORDEM=0,1,2
 PONTEIRO=0
 PLAYERS=3
-PLAYER|Antonio|4000|0|0|0|0|255,0,0
-PLAYER|Bruno|4000|5|0|0|0|0,0,255
-PLAYER|Carlos|4000|10|0|0|0|255,200,0
+PLAYER|Antonio|4000|0|0|0|0|0
+PLAYER|Bruno|4000|5|0|0|0|1
+PLAYER|Carlos|4000|10|0|0|0|2
 PROPS
 PROP|19|1|2|0
 DECK
@@ -89,7 +93,7 @@ CARD|VAI_PARA_PRISAO|0|23
 CARD|RECEBER|50|1
 
 Descrição breve:
-3 jogadores
+3 jogadores, o primeiro de cor vermelha, o segundo azul e o terceiro laranja.
 Posições(0 a 39)
 Antonio - Casa 0
 Bruno - Casa 5
