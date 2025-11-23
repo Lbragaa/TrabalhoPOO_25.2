@@ -57,6 +57,3 @@ DECK
 CARD|VAI_PARA_PRISAO|0|23
 CARD|RECEBER|50|1
 
-Instruções finais do professor:
-- Nome do projeto deve seguir o padrão de matrícula(s).
-- Arquivo a exportar: zip com o mesmo nome do projeto, contendo este `leiame.txt`.
