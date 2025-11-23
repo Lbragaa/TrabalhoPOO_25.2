@@ -1,0 +1,62 @@
+Trabalho INF1636 – Banco Imobiliário Simplificado
+
+Integrantes:
+- Luan Carlos Almada Braga — 2411776
+- Eduardo Deutscher 2 — 2210218
+- Bruno Tardin Fernandes — 2411072
+
+Classe com método main:
+- (Preencha aqui, ex.: view.MainFrame ou equivalente)
+
+Formato do arquivo de salvamento (texto ASCII):
+- Primeira parte: cabeçalho de estado global
+  BANCO=<saldo_do_banco>
+  ORDEM=<índices separados por vírgula>         ; ordem dos jogadores na rodada
+  PONTEIRO=<índice_atual_na_ORDEM>              ; ponteiro do turno (mod tamanho da ORDEM)
+  PLAYERS=<quantidade_de_jogadores>             ; deve bater com o número de linhas PLAYER a seguir
+
+- Bloco de jogadores:
+  Uma linha por jogador na mesma ordem do cadastro:
+  PLAYER|nome|saldo|posicao|preso(0/1)|falido(0/1)|cartasSaidaLivre|R,G,B
+    • nome: texto sem “|”
+    • saldo: inteiro
+    • posicao: 0..39
+    • preso: 1 se estiver preso, 0 caso contrário
+    • falido: 1 se estiver falido (será removido do tabuleiro ao carregar), 0 caso contrário
+    • cartasSaidaLivre: quantidade de cartas de saída da prisão que o jogador possui
+    • R,G,B: cor do jogador em valores 0..255
+
+- Bloco de propriedades:
+  Linha “PROPS” seguida de zero ou mais linhas:
+  PROP|posicao|ownerIndex|casas|hotel
+    • posicao: 0..39
+    • ownerIndex: índice do jogador (mesma ordem das linhas PLAYER); -1 para sem dono
+    • casas: número de casas (0..4)
+    • hotel: 0 ou 1 (1 apenas se já tiver pelo menos 1 casa)
+  Observação: no carregamento, casas são aplicadas e, se hotel=1, chama-se adicionaHotel.
+
+- Bloco do baralho Sorte/Revés:
+  Linha “DECK” seguida das cartas, na ordem de compra (a primeira linha é a próxima a ser comprada):
+  CARD|TIPO|valor|codigo
+    • TIPO: VAI_PARA_PRISAO, SAIDA_LIVRE, PAGAR, RECEBER, RECEBER_DE_CADA
+    • valor: inteiro (0 para prisão/saída livre)
+    • codigo: número da carta correspondente à imagem (1..30)
+  Regra: cartas não-SAIDA_LIVRE voltam ao fim da fila após compradas; SAIDA_LIVRE fica com o jogador e retorna ao baralho somente quando usada.
+
+Exemplo mínimo:
+BANCO=200000
+ORDEM=0,1,2
+PONTEIRO=0
+PLAYERS=3
+PLAYER|Ana|4000|0|0|0|0|255,0,0
+PLAYER|Bruno|4000|5|0|0|0|0,0,255
+PLAYER|Carla|4000|10|0|0|0|255,200,0
+PROPS
+PROP|19|1|2|0
+DECK
+CARD|VAI_PARA_PRISAO|0|23
+CARD|RECEBER|50|1
+
+Instruções finais do professor:
+- Nome do projeto deve seguir o padrão de matrícula(s).
+- Arquivo a exportar: zip com o mesmo nome do projeto, contendo este `leiame.txt`.
