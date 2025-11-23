@@ -34,6 +34,12 @@ public class MainFrame extends JFrame {
             Color[] cores  = snapCarregado.players().stream().map(p -> p.cor()).toArray(Color[]::new);
             int[] ordem    = snapCarregado.ordem();
             ui = new UiState(nomes.length, cores, nomes, ordem);
+            // Desativa visualmente jogadores falidos do snapshot
+            for (int i = 0; i < snapCarregado.players().size(); i++) {
+                if (snapCarregado.players().get(i).falido()) {
+                    ui.setAtivo(i, false);
+                }
+            }
             game = GameFacade.initFromSnapshot(snapCarregado);
         } else {
             int     n      = dlg.getNumJogadores();

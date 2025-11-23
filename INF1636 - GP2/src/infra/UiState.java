@@ -23,6 +23,7 @@ public class UiState {
     private final Color[] cores;    // cor exibida
     private final String[] nomes;   // nome exibido
     private final int[] pinoIndex;  // 0..5 (seleção de sprite)
+    private final boolean[] ativo;  // true se jogador ainda está no jogo
 
     /** Ordem sorteada de jogadores (ex.: [2,0,1]). */
     private final List<Integer> ordem;
@@ -54,12 +55,14 @@ public class UiState {
         this.cores = new Color[numJogadores];
         this.nomes = new String[numJogadores];
         this.pinoIndex = new int[numJogadores];
+        this.ativo = new boolean[numJogadores];
 
         Color[] defaults = defaultColors(numJogadores);
 
         for (int i = 0; i < numJogadores; i++) {
             pos[i] = 0;
             pista[i] = i; // distribui visualmente os peões de saída
+            ativo[i] = true;
 
             Color cor = (cores != null && i < cores.length && cores[i] != null)
                     ? cores[i] : defaults[i];
@@ -116,15 +119,6 @@ public class UiState {
     /** Índice do jogador da vez (no domínio 0..n-1). */
     public int jogadorAtual() { return ordem.get(turnoIndex); }
 
-    /** Avança o ponteiro de turno (uso local de protótipo; o oficial vem do Model). */
-    public void proximoTurno() { turnoIndex = (turnoIndex + 1) % numJogadores; }
-
-    /** Movimento local para protótipo/teste visual (o oficial vem do Model). */
-    public void moverJogadorAtual(int passos) {
-        int j = jogadorAtual();
-        pos[j] = norm40(pos[j] + passos);
-    }
-
     // ======= Sincronização com o Model (chamadas feitas pelo Controller) =======
 
     /** Ajusta a posição de um jogador para refletir o estado do Model. */
@@ -151,6 +145,12 @@ public class UiState {
     public String getNome(int jogador)   { return nomes[jogador]; }
     public String getNomeAtual()         { return nomes[jogadorAtual()]; }
     public int getPinoIndex(int jogador) { return pinoIndex[jogador]; }
+    public boolean isAtivo(int jogador)  { return jogador >=0 && jogador < ativo.length && ativo[jogador]; }
+    /** Marca jogador como ativo/inativo para refletir falência. */
+    public void setAtivo(int jogador, boolean status) {
+        if (jogador < 0 || jogador >= ativo.length) return;
+        ativo[jogador] = status;
+    }
 
     public int getNumJogadores()         { return numJogadores; }
     public List<Integer> getOrdem()      { return Collections.unmodifiableList(ordem); }

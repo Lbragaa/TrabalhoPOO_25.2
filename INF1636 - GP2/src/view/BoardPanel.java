@@ -62,6 +62,7 @@ public class BoardPanel extends JPanel {
 
             // pinos
             for (int j = 0; j < ui.getNumJogadores(); j++) {
+                if (!ui.isAtivo(j)) continue; // não desenha jogador falido
                 int cell = ui.getPos(j);
                 Point c = BoardGeom.centerOfCell(cell, x, y, bw, bh);
                 Point off = BoardGeom.trackOffset(ui.getPista(j));
@@ -97,20 +98,9 @@ public class BoardPanel extends JPanel {
         g2.dispose();
     }
 
-    // Usa UiState diretamente; se falhar, mapeia por cor.
+    // Usa UiState diretamente (mapeamento cor->pino já está centralizado lá).
     private int safePinIndex(int j) {
-        try {
-            return ui.getPinoIndex(j);
-        } catch (Throwable t) {
-            Color c = ui.getCor(j);
-            if (c == null) return 0;
-            if (c.equals(Color.RED))    return 0;
-            if (c.equals(Color.BLUE))   return 1;
-            if (c.getRed() > 240 && c.getGreen() > 140 && c.getBlue() < 20) return 2; // Orange
-            if (c.equals(Color.YELLOW)) return 3;
-            if (c.getRed() > 240 && c.getGreen() < 120 && c.getBlue() > 180) return 4; // Pink
-            if (c.equals(Color.GRAY))   return 5;
-            return 0;
-        }
+        if (j < 0 || j >= ui.getNumJogadores()) return 0;
+        return ui.getPinoIndex(j);
     }
 }

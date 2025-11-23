@@ -110,7 +110,7 @@ public class UIController implements GameObserver {
     }
 
     private void restoreCurrentCellCard(int indiceJogador, int celula, boolean preverSorteReves) {
-        boolean eSorteReves = CardResolver.isChanceCell(celula);
+        boolean eSorteReves = game.isChanceCell(celula);
         boolean mostrarChance = (preverSorteReves && eSorteReves);
 
         Integer indiceDono = (!mostrarChance ? game.getIndiceDonoDaPosicao(celula) : null);
@@ -138,11 +138,11 @@ public class UIController implements GameObserver {
     @Override public void onMoved(int indiceJogador, int celulaOrigem, int celulaDestino) {
         ui.setPos(indiceJogador, celulaDestino);
 
-        boolean eSorteReves = CardResolver.isChanceCell(celulaDestino);
+        boolean eSorteReves = game.isChanceCell(celulaDestino);
         restoreCurrentCellCard(indiceJogador, celulaDestino, /*preverSorteReves=*/!eSorteReves);
 
         if (game.jogadorEstaPreso(indiceJogador)) {
-            int celulaPrisao = 10;
+            int celulaPrisao = game.getPosicaoPrisao();
             Integer donoPrisao = game.getIndiceDonoDaPosicao(celulaPrisao);
             Color corDonoPrisao = (donoPrisao != null ? ui.getCor(donoPrisao) : null);
             property.showForCell(
@@ -156,6 +156,11 @@ public class UIController implements GameObserver {
             if (game.propriedadeDisponivel(celulaDestino)) {
                 String nomeProp = game.getNomePropriedade(celulaDestino);
                 int preco = game.getPrecoPropriedade(celulaDestino);
+                if (game.getSaldo(indiceJogador) < preco) {
+                    // Não tem saldo: não mostra opção de compra
+                    board.repaint();
+                    return;
+                }
                 int opt = JOptionPane.showConfirmDialog(board,
                         ui.getNome(indiceJogador) + " caiu em \"" + nomeProp + "\" (R$ " + preco + "). Deseja comprar?",
                         "Comprar propriedade", JOptionPane.YES_NO_OPTION);
@@ -168,6 +173,10 @@ public class UIController implements GameObserver {
                 int valor = construirHotel
                         ? game.getValorHotelAqui(indiceJogador)
                         : game.getValorCasaAqui(indiceJogador);
+                if (game.getSaldo(indiceJogador) < valor) {
+                    board.repaint();
+                    return;
+                }
 
                 String tipo = construirHotel ? "hotel" : "casa";
                 String titulo = construirHotel ? "Construir hotel" : "Construir casa";
@@ -233,7 +242,7 @@ public class UIController implements GameObserver {
     @Override public void onJailStatus(int indiceJogador, boolean preso) {
         if (preso) {
             if (!jailTriggeredByChanceCard) {
-                int celulaPrisao = 10;
+                int celulaPrisao = game.getPosicaoPrisao();
                 Integer donoPrisao = game.getIndiceDonoDaPosicao(celulaPrisao);
                 Color corDonoPrisao = (donoPrisao != null ? ui.getCor(donoPrisao) : null);
                 property.showForCell(
@@ -245,7 +254,7 @@ public class UIController implements GameObserver {
             JOptionPane.showMessageDialog(board,
                     ui.getNome(indiceJogador) + " está preso!",
                     "VOCÊ ESTÁ PRESO!", JOptionPane.INFORMATION_MESSAGE);
-            ui.setPos(indiceJogador, 10);
+            ui.setPos(indiceJogador, game.getPosicaoPrisao());
         } else {
             int celula = game.getPosicao(indiceJogador);
             restoreCurrentCellCard(indiceJogador, celula, /*preverSorteReves=*/true);
@@ -266,6 +275,7 @@ public class UIController implements GameObserver {
     }
 
     @Override public void onBankruptcy(int indiceJogador) {
+        ui.setAtivo(indiceJogador, false); // some da UI
         JOptionPane.showMessageDialog(board,
                 ui.getNome(indiceJogador) + " entrou em falência.",
                 "Falência", JOptionPane.INFORMATION_MESSAGE);
@@ -451,6 +461,7 @@ public class UIController implements GameObserver {
 
         boolean first = true;
         for (int i = 0; i < n; i++) {
+            if (!ui.isAtivo(i)) continue;
             if (!first) sb.append("  |  ");
             sb.append(ui.getNome(i))
               .append(": R$ ")

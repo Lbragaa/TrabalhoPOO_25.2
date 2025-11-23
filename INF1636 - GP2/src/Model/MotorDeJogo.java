@@ -164,6 +164,7 @@ public class MotorDeJogo {
     public boolean verificarFalencia(Jogador jogador) {
         if (jogador.getConta().getSaldo() < 0 || jogador.isFalido()) {
             jogador.setFalido(true);
+            jogador.getConta().setSaldo(0); // capital zerado para ranking
             tabuleiro.limparPropriedadesDe(jogador);
             tabuleiro.removerJogador(jogador);
             return true;

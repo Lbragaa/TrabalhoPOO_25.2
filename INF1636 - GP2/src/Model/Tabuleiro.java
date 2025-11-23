@@ -27,7 +27,7 @@ class Tabuleiro {
         this.propriedades = new ArrayList<>();
         this.jogadoresAtivos = new ArrayList<>();
         this.baralhoSorteReves = new LinkedList<>();
-        inicializarBaralhoTeste(); // baralho real (chance1..chance30) embaralhado
+        inicializarBaralhoSorteRevesDefault(); // baralho real (chance1..chance30) embaralhado
     }
 
     /** Total de casas (0..39). */

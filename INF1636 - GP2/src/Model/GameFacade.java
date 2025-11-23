@@ -81,7 +81,7 @@ public final class GameFacade implements GameSubject {
     }
 
     // ---------- Consultas ----------
-    public int  getIndiceJogadorDaVez()                { return ordem[ponteiroDaVez]; }
+    public int  getIndiceJogadorDaVez()                { ajustarPonteiroParaJogadorAtivo(); return ordem[ponteiroDaVez]; }
     public int  getPosicao(int indiceJogador)          { return jogadores.get(indiceJogador).getPosicao(); }
     public int  getSaldo(int indiceJogador)            { return jogadores.get(indiceJogador).getConta().getSaldo(); }
     public boolean jogadorEstaPreso(int indiceJogador) { return jogadores.get(indiceJogador).estaPreso(); }
@@ -182,6 +182,10 @@ public final class GameFacade implements GameSubject {
         }
         return false;
     }
+    /** Consulta se a célula é de Sorte/Revés (regra do domínio). */
+    public boolean isChanceCell(int celula) { return tabuleiro.isChanceCell(norm40(celula)); }
+    /** Posição da casa de prisão/visita (casa 10). */
+    public int getPosicaoPrisao() { return Tabuleiro.getPosicaoVisitaPrisao(); }
 
     // ---------- Ações atômicas para o Controller orquestrar ----------
     /** Sorteia dois dados (1..6) e retorna lista [d1,d2]. */
@@ -214,8 +218,12 @@ public final class GameFacade implements GameSubject {
             banco.getConta().paga(j.getConta(), 200);
             for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, 200, "Lucros ou dividendos: +200");
         } else if (tabuleiro.isCasaImpostoRenda(celula)) {
-            j.getConta().paga(banco.getConta(), 200);
-            for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, -200, "Imposto de renda: -200");
+            boolean pagou = j.getConta().paga(banco.getConta(), 4000); // TEMP: valor elevado para testes de falência
+            if (!pagou) {
+                j.setFalido(true);
+                motor.verificarFalencia(j);
+            }
+            for (GameObserver o : observadores) o.onSpecialCell(indiceJogador, celula, -4000, "Imposto de renda: -2000 (teste)");
         }
     }
 
@@ -353,8 +361,26 @@ public final class GameFacade implements GameSubject {
         return -1;
     }
 
+    /** Ajusta ponteiro para um jogador não falido, se necessário. */
+    private void ajustarPonteiroParaJogadorAtivo() {
+        int tentativas = jogadores.size();
+        while (tentativas-- > 0 && jogadores.get(ordem[ponteiroDaVez]).isFalido()) {
+            ponteiroDaVez = (ponteiroDaVez + 1) % ordem.length;
+        }
+    }
+
     private void avancarVezENotificar() {
-        ponteiroDaVez = (ponteiroDaVez + 1) % ordem.length;
+        // avança até encontrar um não falido ou concluir que acabou
+        int vivos = 0;
+        for (Jogador j : jogadores) if (!j.isFalido()) vivos++;
+        if (vivos <= 1) { notificarFimPartida(); return; }
+
+        int tentativas = jogadores.size();
+        do {
+            ponteiroDaVez = (ponteiroDaVez + 1) % ordem.length;
+            tentativas--;
+        } while (tentativas > 0 && jogadores.get(ordem[ponteiroDaVez]).isFalido());
+
         int atual = getIndiceJogadorDaVez();
         for (GameObserver o : observadores) o.onTurnChanged(atual);
     }
@@ -463,8 +489,8 @@ public final class GameFacade implements GameSubject {
         tabuleiro.addPropriedade(new Terreno("Interlagos",                 350,175, 35, 17));
         tabuleiro.addPropriedade(new Terreno("Morumbi",                    400,200, 40, 19));
         tabuleiro.addPropriedade(new Terreno("Flamengo",                   120, 60, 12, 21));
-        tabuleiro.addPropriedade(new Terreno("Botafogo",                   100, 50, 10, 22));
-        tabuleiro.addPropriedade(new Companhia("Companhia de Navegação",   150, 1, 25,  24));
+        tabuleiro.addPropriedade(new Terreno("Botafogo",                   100, 50, 10, 23));
+        tabuleiro.addPropriedade(new Companhia("Companhia de Navegação",   150, 1, 25,  25));
         tabuleiro.addPropriedade(new Terreno("Av. Brasil",                 160, 80, 16, 26));
         tabuleiro.addPropriedade(new Terreno("Av. Paulista",               140, 70, 14, 27));
         tabuleiro.addPropriedade(new Terreno("Jardim Europa",              140, 70, 14, 29));
@@ -511,17 +537,6 @@ public final class GameFacade implements GameSubject {
         for (GameObserver o : observadores) o.onHouseBuilt(indiceJogador, celula, numeroCasas);
     }
 
-    /** Usa carta de liberação se disponível, notificando a UI. */
-    private void tentarUsarCartaLiberacaoAutomatica(Jogador jogador, int indiceJogador) {
-        if (!jogador.estaPreso()) return;
-        if (jogador.getCartasLiberacao() <= 0) return;
-        boolean usou = motor.usarCartaLiberacao(jogador);
-        if (usou) {
-            // Agora avisa a UI para exibir o popup da carta usada
-            for (GameObserver o : observadores) o.onReleaseCardUsed(indiceJogador);
-        }
-    }
-
     /** Se restar apenas um jogador não falido, encerra a partida automaticamente. */
     private void verificarFimPorUnicoRestante() {
         int vivo = -1, vivos = 0;
@@ -553,6 +568,7 @@ public final class GameFacade implements GameSubject {
     /** Capital = saldo + valor das propriedades + construções. */
     private int calcularCapital(int indiceJogador) {
         Jogador j = jogadores.get(indiceJogador);
+        if (j.isFalido()) return 0;
         int total = j.getConta().getSaldo();
         for (int pos = 0; pos < 40; pos++) {
             Propriedade p = tabuleiro.getPropriedadeNaPosicao(pos);
