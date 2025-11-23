@@ -318,6 +318,9 @@ public final class GameFacade implements GameSubject {
             }
         }
 
+        // Se foi preso (casa 30 ou carta) e possui carta de liberação, usa automaticamente
+        tentarUsarCartaLiberacaoAutomatica(jogadorDaVez, indiceJogadorDaVez);
+
         detectarENotificarEstadoGlobal();
         avancarVezENotificar();
     }
@@ -399,5 +402,15 @@ public final class GameFacade implements GameSubject {
     }
     private void notificarCasaConstruida(int indiceJogador, int celula, int numeroCasas) {
         for (GameObserver o : observadores) o.onHouseBuilt(indiceJogador, celula, numeroCasas);
+    }
+
+    /** Usa carta de liberação se disponível, notificando a UI. */
+    private void tentarUsarCartaLiberacaoAutomatica(Jogador jogador, int indiceJogador) {
+        if (!jogador.estaPreso()) return;
+        if (jogador.getCartasLiberacao() <= 0) return;
+        boolean usou = motor.usarCartaLiberacao(jogador);
+        if (usou) {
+            for (GameObserver o : observadores) o.onReleaseCardUsed(indiceJogador);
+        }
     }
 }
