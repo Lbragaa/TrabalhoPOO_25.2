@@ -30,12 +30,14 @@ public class MainFrame extends JFrame {
         GameFacade game;
         UiState ui;
         if (snapCarregado != null) {
-            String[] nomes = snapCarregado.players().stream().map(p -> p.nome()).toArray(String[]::new);
-            Color[] cores  = snapCarregado.players().stream()
-                    .map(p -> UiState.PIN_PALETTE[Math.max(0, Math.min(p.corIndex(), UiState.PIN_PALETTE.length-1))])
-                    .toArray(Color[]::new);
-            int[] ordem    = snapCarregado.ordem();
-            ui = new UiState(nomes.length, cores, nomes, ordem);
+            var nomes = snapCarregado.players().stream().map(p -> p.nome()).toList();
+            var cores  = snapCarregado.players().stream()
+                    .map(p -> UiState.PIN_PALETTE.get(
+                            Math.max(0, Math.min(p.corIndex(), UiState.PIN_PALETTE.size()-1)))
+                    )
+                    .toList();
+            var ordem    = snapCarregado.ordem();
+            ui = new UiState(nomes.size(), cores, nomes, ordem);
             // Desativa visualmente jogadores falidos do snapshot
             for (int i = 0; i < snapCarregado.players().size(); i++) {
                 if (snapCarregado.players().get(i).falido()) {
@@ -45,9 +47,9 @@ public class MainFrame extends JFrame {
             game = GameFacade.initFromSnapshot(snapCarregado);
         } else {
             int     n      = dlg.getNumJogadores();
-            Color[] cores  = dlg.getCoresEscolhidas();
-            String[] nomes = dlg.getNomesEscolhidos();
-            int[]   ordem  = dlg.getOrdemSorteada();
+            var cores  = dlg.getCoresEscolhidas();
+            var nomes = dlg.getNomesEscolhidos();
+            var ordem  = dlg.getOrdemSorteada();
             ui = new UiState(n, cores, nomes, ordem);
             game = GameFacade.init(nomes, ordem);
         }

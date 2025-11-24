@@ -1,5 +1,7 @@
 package Model;
 
+import java.util.List;
+
 /**
  * Observador de eventos do jogo para a UI.
  * A UI implementa esta interface e recebe callbacks do backend (Model/Façade).
@@ -45,5 +47,5 @@ public interface GameObserver {
     default void onReleaseCardUsed(int playerIndex) {}
 
     /** Notifica término da partida: vencedor e capital de cada jogador. */
-    default void onGameEnded(int winnerIndex, int[] capitaisPorJogador) {}
+    default void onGameEnded(int winnerIndex, List<Integer> capitaisPorJogador) {}
 }

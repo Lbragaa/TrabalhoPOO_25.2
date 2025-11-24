@@ -422,10 +422,10 @@ public class UIController implements GameObserver {
         }
     }
 
-    private Color[] coletarCores() {
+    private List<Color> coletarCores() {
         int n = ui.getNumJogadores();
-        Color[] cores = new Color[n];
-        for (int i = 0; i < n; i++) cores[i] = ui.getCor(i);
+        List<Color> cores = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) cores.add(ui.getCor(i));
         return cores;
     }
 
@@ -455,20 +455,20 @@ public class UIController implements GameObserver {
     }
 
     @Override
-    public void onGameEnded(int winnerIndex, int[] capitaisPorJogador) {
+    public void onGameEnded(int winnerIndex, List<Integer> capitaisPorJogador) {
         // Ordena por capital desc para exibição
         List<Integer> ordem = new ArrayList<>();
-        for (int i = 0; i < capitaisPorJogador.length; i++) ordem.add(i);
-        ordem.sort((a, b) -> Integer.compare(capitaisPorJogador[b], capitaisPorJogador[a]));
+        for (int i = 0; i < capitaisPorJogador.size(); i++) ordem.add(i);
+        ordem.sort((a, b) -> Integer.compare(capitaisPorJogador.get(b), capitaisPorJogador.get(a)));
 
         StringBuilder sb = new StringBuilder();
-        int max = Integer.MIN_VALUE;
-        for (int cap : capitaisPorJogador) if (cap > max) max = cap;
+        int max = capitaisPorJogador.stream().mapToInt(Integer::intValue).max().orElse(Integer.MIN_VALUE);
 
         List<String> vencedores = new ArrayList<>();
         for (int idx : ordem) {
-            sb.append(ui.getNome(idx)).append(": R$ ").append(capitaisPorJogador[idx]).append("\n");
-            if (capitaisPorJogador[idx] == max) vencedores.add(ui.getNome(idx));
+            int capital = capitaisPorJogador.get(idx);
+            sb.append(ui.getNome(idx)).append(": R$ ").append(capital).append("\n");
+            if (capital == max) vencedores.add(ui.getNome(idx));
         }
 
         String msg = "Capitais apurados:\n\n" + sb +

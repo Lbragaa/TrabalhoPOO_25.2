@@ -5,7 +5,7 @@ import java.util.List;
 /** Snapshot imutável do estado completo do jogo para salvar/carregar. */
 public record GameStateSnapshot(
         int bancoSaldo,
-        int[] ordem,
+        List<Integer> ordem,
         int ponteiro,
         List<PlayerData> players,
         List<PropertyData> propriedades,

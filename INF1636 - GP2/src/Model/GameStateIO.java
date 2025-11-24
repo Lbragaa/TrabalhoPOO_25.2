@@ -30,7 +30,7 @@ final class GameStateIO {
     static void salvar(GameStateSnapshot snapshot, File arquivo) throws IOException {
         try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(arquivo), StandardCharsets.US_ASCII))) {
             out.println("BANCO=" + snapshot.bancoSaldo());
-            out.println("ORDEM=" + joinIntArray(snapshot.ordem()));
+            out.println("ORDEM=" + joinIntList(snapshot.ordem()));
             out.println("PONTEIRO=" + snapshot.ponteiro());
             out.println("PLAYERS=" + snapshot.players().size());
             for (GameStateSnapshot.PlayerData p : snapshot.players()) {
@@ -53,7 +53,7 @@ final class GameStateIO {
         List<String> linhas = Files.readAllLines(arquivo.toPath(), StandardCharsets.US_ASCII);
         Iterator<String> it = linhas.iterator();
         int bancoSaldo = 0;
-        int[] ordem = null;
+        List<Integer> ordem = null;
         int ponteiro = 0;
         int nPlayers = 0;
         List<GameStateSnapshot.PlayerData> players = new ArrayList<>();
@@ -64,7 +64,7 @@ final class GameStateIO {
             String ln = it.next().trim();
             if (ln.isEmpty()) continue;
             if (ln.startsWith("BANCO=")) { bancoSaldo = Integer.parseInt(ln.substring(6)); continue; }
-            if (ln.startsWith("ORDEM=")) { ordem = parseIntArray(ln.substring(6)); continue; }
+            if (ln.startsWith("ORDEM=")) { ordem = parseIntList(ln.substring(6)); continue; }
             if (ln.startsWith("PONTEIRO=")) { ponteiro = Integer.parseInt(ln.substring(9)); continue; }
             if (ln.startsWith("PLAYERS=")) { nPlayers = Integer.parseInt(ln.substring(8)); continue; }
             if (ln.equals("PROPS")) { break; }
@@ -101,23 +101,29 @@ final class GameStateIO {
             }
         }
 
-        if (ordem == null) ordem = new int[Math.max(1, nPlayers)];
+        if (ordem == null) ordem = new ArrayList<>();
+        if (ordem.isEmpty()) {
+            for (int i = 0; i < nPlayers; i++) ordem.add(i);
+        }
         return new GameStateSnapshot(bancoSaldo, ordem, ponteiro, players, props, deck);
     }
 
-    private static String joinIntArray(int[] arr) {
+    private static String joinIntList(List<Integer> arr) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < arr.length; i++) {
+        for (int i = 0; i < arr.size(); i++) {
             if (i > 0) sb.append(",");
-            sb.append(arr[i]);
+            sb.append(arr.get(i));
         }
         return sb.toString();
     }
 
-    private static int[] parseIntArray(String s) {
+    private static List<Integer> parseIntList(String s) {
         String[] parts = s.split(",");
-        int[] out = new int[parts.length];
-        for (int i = 0; i < parts.length; i++) out[i] = Integer.parseInt(parts[i].trim());
+        List<Integer> out = new ArrayList<>(parts.length);
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) out.add(Integer.parseInt(trimmed));
+        }
         return out;
     }
 

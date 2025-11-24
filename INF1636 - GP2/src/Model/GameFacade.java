@@ -2,7 +2,7 @@ package Model;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /** Façade + Singleton: ponto único de contato da UI com o Model. */
@@ -11,7 +11,7 @@ public final class GameFacade implements GameSubject {
     // ---------- Singleton ----------
     private static GameFacade INSTANCIA;
 
-    public static GameFacade init(String[] nomes, int[] ordemSorteada) {
+    public static GameFacade init(List<String> nomes, List<Integer> ordemSorteada) {
         if (INSTANCIA == null) INSTANCIA = new GameFacade(nomes, ordemSorteada);
         return INSTANCIA;
     }
@@ -29,21 +29,21 @@ public final class GameFacade implements GameSubject {
     private final List<Jogador> jogadores = new ArrayList<>();
     private final List<GameObserver> observadores = new ArrayList<>();
 
-    private final int[] ordem;
+    private final List<Integer> ordem;
     private int ponteiroDaVez = 0;
 
     // Estado anterior (para diffs)
-    private int[] saldoAnterior;
-    private boolean[] presoAnterior;
-    private boolean[] falidoAnterior;
+    private List<Integer> saldoAnterior;
+    private List<Boolean> presoAnterior;
+    private List<Boolean> falidoAnterior;
 
     /** Paleta fixa de cores de pino (alinhada ao save). */
-    private static final Color[] PIN_PALETTE = new Color[] {
+    private static final List<Color> PIN_PALETTE = List.of(
             Color.RED, Color.BLUE, Color.ORANGE, Color.YELLOW, Color.PINK, Color.GRAY
-    };
+    );
 
     // Construtor privado
-    private GameFacade(String[] nomes, int[] ordemSorteada) {
+    private GameFacade(List<String> nomes, List<Integer> ordemSorteada) {
         this.banco = new Banco();
         this.tabuleiro = new Tabuleiro();
         cadastrarPropriedadesPadrao();
@@ -54,23 +54,23 @@ public final class GameFacade implements GameSubject {
             tabuleiro.addJogador(j);
         }
 
-        if (ordemSorteada != null && ordemSorteada.length == jogadores.size()) {
-            this.ordem = ordemSorteada.clone();
+        this.ordem = new ArrayList<>();
+        if (ordemSorteada != null && ordemSorteada.size() == jogadores.size()) {
+            this.ordem.addAll(ordemSorteada);
         } else {
-            this.ordem = new int[jogadores.size()];
-            for (int i = 0; i < this.ordem.length; i++) this.ordem[i] = i;
+            for (int i = 0; i < jogadores.size(); i++) this.ordem.add(i);
         }
 
         this.motor = new MotorDeJogo(banco, tabuleiro);
 
         int n = jogadores.size();
-        saldoAnterior  = new int[n];
-        presoAnterior  = new boolean[n];
-        falidoAnterior = new boolean[n];
+        saldoAnterior  = new ArrayList<>(Collections.nCopies(n, 0));
+        presoAnterior  = new ArrayList<>(Collections.nCopies(n, false));
+        falidoAnterior = new ArrayList<>(Collections.nCopies(n, false));
         for (int i = 0; i < n; i++) {
-            saldoAnterior[i]  = jogadores.get(i).getConta().getSaldo();
-            presoAnterior[i]  = jogadores.get(i).estaPreso();
-            falidoAnterior[i] = jogadores.get(i).isFalido();
+            saldoAnterior.set(i, jogadores.get(i).getConta().getSaldo());
+            presoAnterior.set(i, jogadores.get(i).estaPreso());
+            falidoAnterior.set(i, jogadores.get(i).isFalido());
         }
     }
 
@@ -86,7 +86,7 @@ public final class GameFacade implements GameSubject {
     }
 
     // ---------- Consultas ----------
-    public int  getIndiceJogadorDaVez()                { ajustarPonteiroParaJogadorAtivo(); return ordem[ponteiroDaVez]; }
+    public int  getIndiceJogadorDaVez()                { ajustarPonteiroParaJogadorAtivo(); return ordem.get(ponteiroDaVez); }
     public int  getPosicao(int indiceJogador)          { return jogadores.get(indiceJogador).getPosicao(); }
     public int  getSaldo(int indiceJogador)            { return jogadores.get(indiceJogador).getConta().getSaldo(); }
     public boolean jogadorEstaPreso(int indiceJogador) { return jogadores.get(indiceJogador).estaPreso(); }
@@ -216,14 +216,14 @@ public int getValorCasaAqui(int indiceJogador) {
 
     /** Tenta liberar da prisão caso seja dupla; retorna true se liberou. */
     public boolean tentarLiberarComDupla(int indiceJogador, int d1, int d2) {
-        return motor.soltarSeDupla(jogadores.get(indiceJogador), Arrays.asList(d1, d2));
+        return motor.soltarSeDupla(jogadores.get(indiceJogador), List.of(d1, d2));
     }
 
     /** Move o jogador pelos dados e notifica movimento. */
     public void moverJogadorComDados(int indiceJogador, int d1, int d2) {
         Jogador j = jogadores.get(indiceJogador);
         int origem = j.getPosicao();
-        motor.moverJogador(j, Arrays.asList(d1, d2));
+        motor.moverJogador(j, List.of(d1, d2));
         int destino = j.getPosicao();
         for (GameObserver o : observadores) o.onMoved(indiceJogador, origem, destino);
     }
@@ -291,7 +291,7 @@ public int getValorCasaAqui(int indiceJogador) {
     public void avancarTurnoENotificar() { avancarVezENotificar(); }
 
     // ---------- Persistência ----------
-    public void salvarParaArquivo(java.io.File arquivo, Color[] coresJogadores) throws java.io.IOException {
+    public void salvarParaArquivo(java.io.File arquivo, List<Color> coresJogadores) throws java.io.IOException {
         GameStateIO.salvar(snapshot(coresJogadores), arquivo);
     }
     public static GameStateSnapshot carregarSnapshot(java.io.File arquivo) throws java.io.IOException {
@@ -402,8 +402,8 @@ public int getValorCasaAqui(int indiceJogador) {
     /** Ajusta ponteiro para um jogador não falido, se necessário. */
     private void ajustarPonteiroParaJogadorAtivo() {
         int tentativas = jogadores.size();
-        while (tentativas-- > 0 && jogadores.get(ordem[ponteiroDaVez]).isFalido()) {
-            ponteiroDaVez = (ponteiroDaVez + 1) % ordem.length;
+        while (tentativas-- > 0 && jogadores.get(ordem.get(ponteiroDaVez)).isFalido()) {
+            ponteiroDaVez = (ponteiroDaVez + 1) % ordem.size();
         }
     }
 
@@ -415,9 +415,9 @@ public int getValorCasaAqui(int indiceJogador) {
 
         int tentativas = jogadores.size();
         do {
-            ponteiroDaVez = (ponteiroDaVez + 1) % ordem.length;
+            ponteiroDaVez = (ponteiroDaVez + 1) % ordem.size();
             tentativas--;
-        } while (tentativas > 0 && jogadores.get(ordem[ponteiroDaVez]).isFalido());
+        } while (tentativas > 0 && jogadores.get(ordem.get(ponteiroDaVez)).isFalido());
 
         int atual = getIndiceJogadorDaVez();
         for (GameObserver o : observadores) o.onTurnChanged(atual);
@@ -426,12 +426,12 @@ public int getValorCasaAqui(int indiceJogador) {
     private static int norm40(int v) { return ((v % 40) + 40) % 40; }
 
     // ---------- Suporte a salvar/carregar ----------
-    GameStateSnapshot snapshot(Color[] coresJogadores) {
+    GameStateSnapshot snapshot(List<Color> coresJogadores) {
         List<GameStateSnapshot.PlayerData> players = new ArrayList<>();
         for (int i = 0; i < jogadores.size(); i++) {
             Jogador j = jogadores.get(i);
-            Color cor = (coresJogadores != null && i < coresJogadores.length && coresJogadores[i] != null)
-                    ? coresJogadores[i] : Color.GRAY;
+            Color cor = (coresJogadores != null && i < coresJogadores.size() && coresJogadores.get(i) != null)
+                    ? coresJogadores.get(i) : Color.GRAY;
             int corIndex = colorToIndex(cor);
             players.add(new GameStateSnapshot.PlayerData(
                     j.getNome(), corIndex, j.getConta().getSaldo(), j.getPosicao(),
@@ -449,16 +449,16 @@ public int getValorCasaAqui(int indiceJogador) {
             props.add(new GameStateSnapshot.PropertyData(pos, owner, casas, hotel));
         }
         List<Carta> deck = new ArrayList<>(tabuleiro.baralhoSorteReves);
-        return new GameStateSnapshot(banco.getSaldo(), ordem.clone(), ponteiroDaVez, players, props, deck);
+        return new GameStateSnapshot(banco.getSaldo(), new ArrayList<>(ordem), ponteiroDaVez, players, props, deck);
     }
 
     static GameFacade carregarDeSnapshot(GameStateSnapshot snap) {
-        String[] nomes = snap.players().stream().map(GameStateSnapshot.PlayerData::nome).toArray(String[]::new);
+        List<String> nomes = snap.players().stream().map(GameStateSnapshot.PlayerData::nome).toList();
         GameFacade gf = new GameFacade(nomes, snap.ordem());
         INSTANCIA = gf;
 
         gf.banco.setSaldo(snap.bancoSaldo());
-        gf.ponteiroDaVez = ((snap.ponteiro() % gf.ordem.length) + gf.ordem.length) % gf.ordem.length;
+        gf.ponteiroDaVez = ((snap.ponteiro() % gf.ordem.size()) + gf.ordem.size()) % gf.ordem.size();
 
         for (int i = 0; i < gf.jogadores.size(); i++) {
             GameStateSnapshot.PlayerData p = snap.players().get(i);
@@ -494,19 +494,19 @@ public int getValorCasaAqui(int indiceJogador) {
     /* package */ List<Jogador> getJogadores() { return jogadores; }
     /* package */ Tabuleiro getTabuleiro() { return tabuleiro; }
     /* package */ Banco getBanco() { return banco; }
-    /* package */ int[] getOrdem() { return ordem; }
+    /* package */ List<Integer> getOrdem() { return ordem; }
     /* package */ int getPonteiro() { return ponteiroDaVez; }
-    /* package */ void setPonteiro(int p) { this.ponteiroDaVez = ((p % ordem.length) + ordem.length) % ordem.length; }
+    /* package */ void setPonteiro(int p) { this.ponteiroDaVez = ((p % ordem.size()) + ordem.size()) % ordem.size(); }
     /* package */ List<GameObserver> getObservadores() { return observadores; }
     /* package */ void recalcularDiffs() {
         int n = jogadores.size();
-        saldoAnterior  = new int[n];
-        presoAnterior  = new boolean[n];
-        falidoAnterior = new boolean[n];
+        saldoAnterior  = new ArrayList<>(Collections.nCopies(n, 0));
+        presoAnterior  = new ArrayList<>(Collections.nCopies(n, false));
+        falidoAnterior = new ArrayList<>(Collections.nCopies(n, false));
         for (int i = 0; i < n; i++) {
-            saldoAnterior[i]  = jogadores.get(i).getConta().getSaldo();
-            presoAnterior[i]  = jogadores.get(i).estaPreso();
-            falidoAnterior[i] = jogadores.get(i).isFalido();
+            saldoAnterior.set(i, jogadores.get(i).getConta().getSaldo());
+            presoAnterior.set(i, jogadores.get(i).estaPreso());
+            falidoAnterior.set(i, jogadores.get(i).isFalido());
         }
     }
 
@@ -550,21 +550,21 @@ public int getValorCasaAqui(int indiceJogador) {
             Jogador j = jogadores.get(i);
 
             int saldoAtual = j.getConta().getSaldo();
-            if (saldoAtual != saldoAnterior[i]) {
+            if (!saldoAnterior.get(i).equals(saldoAtual)) {
                 for (GameObserver o : observadores) o.onBalanceChanged(i, saldoAtual);
-                saldoAnterior[i] = saldoAtual;
+                saldoAnterior.set(i, saldoAtual);
             }
 
             boolean presoAtual = j.estaPreso();
-            if (presoAtual != presoAnterior[i]) {
+            if (!presoAnterior.get(i).equals(presoAtual)) {
                 for (GameObserver o : observadores) o.onJailStatus(i, presoAtual);
-                presoAnterior[i] = presoAtual;
+                presoAnterior.set(i, presoAtual);
             }
 
             boolean falidoAtual = j.isFalido();
-            if (falidoAtual && !falidoAnterior[i]) {
+            if (falidoAtual && !falidoAnterior.get(i)) {
                 for (GameObserver o : observadores) o.onBankruptcy(i);
-                falidoAnterior[i] = true;
+                falidoAnterior.set(i, true);
             }
         }
     }
@@ -590,14 +590,15 @@ public int getValorCasaAqui(int indiceJogador) {
     /** Calcula capital de cada jogador e notifica observadores com o vencedor. */
     private void notificarFimPartida() {
         int n = jogadores.size();
-        int[] capitais = new int[n];
+        List<Integer> capitais = new ArrayList<>(Collections.nCopies(n, 0));
         int winner = -1;
         int maior = Integer.MIN_VALUE;
 
         for (int i = 0; i < n; i++) {
-            capitais[i] = calcularCapital(i);
-            if (capitais[i] > maior) {
-                maior = capitais[i];
+            int capital = calcularCapital(i);
+            capitais.set(i, capital);
+            if (capital > maior) {
+                maior = capital;
                 winner = i;
             }
         }
@@ -625,7 +626,7 @@ public int getValorCasaAqui(int indiceJogador) {
     /** Mapeia cor para o índice de pino (0..5) usado no save. */
     private static int colorToIndex(Color c) {
         if (c == null) return 0;
-        for (int i = 0; i < PIN_PALETTE.length; i++) if (PIN_PALETTE[i].equals(c)) return i;
+        for (int i = 0; i < PIN_PALETTE.size(); i++) if (PIN_PALETTE.get(i).equals(c)) return i;
         return 0;
     }
 }

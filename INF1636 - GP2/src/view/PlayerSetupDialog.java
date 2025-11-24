@@ -33,8 +33,8 @@ public class PlayerSetupDialog extends JDialog {
 
     // step 2
     private JPanel playersPanel;
-    private JTextField[] nameFields;
-    private JComboBox<ColorItem>[] colorBoxes;
+    private List<JTextField> nameFields;
+    private List<JComboBox<ColorItem>> colorBoxes;
     private final List<ColorItem> palette = defaultPalette();
 
     // step 3 (ordem)
@@ -42,9 +42,9 @@ public class PlayerSetupDialog extends JDialog {
 
     private boolean confirmed = false;
     private int numJogadores = 3;
-    private Color[] coresEscolhidas;
-    private String[] nomesEscolhidos;
-    private int[] ordemSorteada;
+    private List<Color> coresEscolhidas;
+    private List<String> nomesEscolhidos;
+    private List<Integer> ordemSorteada;
     private GameStateSnapshot snapshotCarregado;
 
     public PlayerSetupDialog(Window owner) {
@@ -103,23 +103,26 @@ public class PlayerSetupDialog extends JDialog {
 
     private void buildPlayersUi(int n) {
         playersPanel.removeAll();
-        nameFields = new JTextField[n];
-        colorBoxes = new JComboBox[n];
+        nameFields = new ArrayList<>(n);
+        colorBoxes = new ArrayList<>(n);
 
         playersPanel.add(new JLabel("Informe nome e cor de cada jogador:"), gbcSpan(0,0,3,1, GridBagConstraints.WEST));
 
         for (int i = 0; i < n; i++) {
             JLabel lbl = new JLabel("Jogador " + (i+1) + ":");
-            nameFields[i] = new JTextField(10);
-            nameFields[i].setDocument(new LimitedDocument(8)); // limita a 8 chars
-            colorBoxes[i] = new JComboBox<>(palette.toArray(new ColorItem[0]));
-            colorBoxes[i].setRenderer(new ColorCellRenderer());
-            // pré-seleciona cores distintas (0..5) para evitar repetição inicial
-            colorBoxes[i].setSelectedIndex(Math.min(i, palette.size()-1));
+            JTextField nameField = new JTextField(10);
+            nameField.setDocument(new LimitedDocument(8)); // limita a 8 chars
+            nameFields.add(nameField);
 
-            playersPanel.add(lbl,           gbc(0, i+1));
-            playersPanel.add(nameFields[i], gbc(1, i+1));
-            playersPanel.add(colorBoxes[i], gbc(2, i+1));
+            JComboBox<ColorItem> cb = new JComboBox<>(palette.toArray(new ColorItem[0]));
+            cb.setRenderer(new ColorCellRenderer());
+            // pré-seleciona cores distintas (0..5) para evitar repetição inicial
+            cb.setSelectedIndex(Math.min(i, palette.size()-1));
+            colorBoxes.add(cb);
+
+            playersPanel.add(lbl,        gbc(0, i+1));
+            playersPanel.add(nameField,  gbc(1, i+1));
+            playersPanel.add(cb,         gbc(2, i+1));
         }
 
         JButton back = new JButton("Voltar");
@@ -139,40 +142,40 @@ public class PlayerSetupDialog extends JDialog {
         int n = numJogadores;
 
         // valida nomes + cores
-        Color[] chosenColors = new Color[n];
-        String[] chosenNames  = new String[n];
+        List<Color> chosenColors = new ArrayList<>(n);
+        List<String> chosenNames  = new ArrayList<>(n);
         boolean[] used = new boolean[palette.size()];
 
         for (int i = 0; i < n; i++) {
-            String nome = nameFields[i].getText().trim();
+            String nome = nameFields.get(i).getText().trim();
             if (!nome.matches("[A-Za-z0-9]{1,8}")) {
                 showMsg("Nome do Jogador " + (i+1) + " inválido. Use 1..8 caracteres alfanuméricos.");
                 return;
             }
-            chosenNames[i] = nome;
+            chosenNames.add(nome);
 
-            ColorItem item = (ColorItem) colorBoxes[i].getSelectedItem();
+            ColorItem item = (ColorItem) colorBoxes.get(i).getSelectedItem();
             if (item == null) { showMsg("Selecione todas as cores."); return; }
             int idx = palette.indexOf(item);
             if (idx >= 0 && used[idx]) { showMsg("As cores não podem se repetir."); return; }
             if (idx >= 0) used[idx] = true;
-            chosenColors[i] = item.color();
+            chosenColors.add(item.color());
         }
 
         this.nomesEscolhidos = chosenNames;
         this.coresEscolhidas = chosenColors;
 
         // sorteia ordem
-        ordemSorteada = new int[n];
-        for (int i = 0; i < n; i++) ordemSorteada[i] = i;
-        shuffle(ordemSorteada, new Random());
+        ordemSorteada = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) ordemSorteada.add(i);
+        shuffleList(ordemSorteada, new Random());
 
         // monta lista visível
         DefaultListModel<String> model = new DefaultListModel<>();
         for (int pos = 0; pos < n; pos++) {
-            int j = ordemSorteada[pos];
-            String corNome = colorName(coresEscolhidas[j]);
-            model.addElement((pos+1) + "º — " + nomesEscolhidos[j] + " (" + corNome + ")");
+            int j = ordemSorteada.get(pos);
+            String corNome = colorName(coresEscolhidas.get(j));
+            model.addElement((pos+1) + "º - " + nomesEscolhidos.get(j) + " (" + corNome + ")");
         }
         ordemList.setModel(model);
 
@@ -196,9 +199,9 @@ public class PlayerSetupDialog extends JDialog {
     // ---- getters usados pelo MainFrame ----
     public boolean isConfirmed()       { return confirmed; }
     public int getNumJogadores()       { return numJogadores; }
-    public Color[] getCoresEscolhidas(){ return coresEscolhidas; }
-    public String[] getNomesEscolhidos(){ return nomesEscolhidos; }
-    public int[] getOrdemSorteada()    { return ordemSorteada; }
+    public List<Color> getCoresEscolhidas(){ return coresEscolhidas; }
+    public List<String> getNomesEscolhidos(){ return nomesEscolhidos; }
+    public List<Integer> getOrdemSorteada()    { return ordemSorteada; }
     public GameStateSnapshot getSnapshotCarregado() { return snapshotCarregado; }
 
     // ---- helpers UI ----
@@ -216,10 +219,10 @@ public class PlayerSetupDialog extends JDialog {
                 // Preenche dados a partir do snapshot
                 int n = snapshotCarregado.players().size();
                 numJogadores = n;
-                nomesEscolhidos = snapshotCarregado.players().stream().map(GameStateSnapshot.PlayerData::nome).toArray(String[]::new);
+                nomesEscolhidos = snapshotCarregado.players().stream().map(GameStateSnapshot.PlayerData::nome).toList();
                 coresEscolhidas = snapshotCarregado.players().stream()
                         .map(p -> colorFromIndex(p.corIndex()))
-                        .toArray(Color[]::new);
+                        .toList();
                 ordemSorteada = snapshotCarregado.ordem();
                 confirmed = true;
                 dispose();
@@ -326,10 +329,10 @@ public class PlayerSetupDialog extends JDialog {
         }
     }
 
-    private static void shuffle(int[] a, Random rnd) {
-        for (int i=a.length-1; i>0; i--) {
+    private static void shuffleList(List<Integer> a, Random rnd) {
+        for (int i=a.size()-1; i>0; i--) {
             int j = rnd.nextInt(i+1);
-            int t=a[i]; a[i]=a[j]; a[j]=t;
+            int t=a.get(i); a.set(i, a.get(j)); a.set(j, t);
         }
     }
 }
