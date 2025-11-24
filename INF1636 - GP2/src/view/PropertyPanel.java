@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 /** Mostra a "carta" (propriedade/companhia ou Sorte/Revés) e algumas infos visuais. */
 public class PropertyPanel extends JPanel {
@@ -123,9 +124,10 @@ public class PropertyPanel extends JPanel {
     private static List<String> wrapLine(String s, FontMetrics fm, int maxW) {
         List<String> out = new ArrayList<>();
         if (s == null) { out.add(""); return out; }
-        String[] words = s.split("\\s+");
+        StringTokenizer tok = new StringTokenizer(s);
         StringBuilder cur = new StringBuilder();
-        for (String w : words) {
+        while (tok.hasMoreTokens()) {
+            String w = tok.nextToken();
             String tryLine = cur.length() == 0 ? w : cur + " " + w;
             if (fm.stringWidth(tryLine) <= maxW) {
                 cur.setLength(0);
@@ -134,18 +136,20 @@ public class PropertyPanel extends JPanel {
                 if (cur.length() > 0) out.add(cur.toString());
                 // se palavra isolada for maior que maxW, força quebra bruta
                 if (fm.stringWidth(w) > maxW) {
-                    String part = "";
-                    for (char ch : w.toCharArray()) {
-                        String next = part + ch;
+                    StringBuilder part = new StringBuilder();
+                    for (int i = 0; i < w.length(); i++) {
+                        char ch = w.charAt(i);
+                        String next = part.toString() + ch;
                         if (fm.stringWidth(next) > maxW) {
-                            out.add(part);
-                            part = String.valueOf(ch);
+                            out.add(part.toString());
+                            part.setLength(0);
+                            part.append(ch);
                         } else {
-                            part = next;
+                            part.append(ch);
                         }
                     }
                     cur.setLength(0);
-                    cur.append(part);
+                    cur.append(part.toString());
                 } else {
                     cur.setLength(0);
                     cur.append(w);

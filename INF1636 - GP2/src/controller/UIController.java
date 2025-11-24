@@ -81,7 +81,9 @@ public class UIController implements GameObserver {
             exibicao.add(nomes.get(i) + " (casas: " + casas + ", hoteis: " + hoteis + ")");
         }
 
-        JList<String> list = new JList<>(exibicao.toArray(new String[0]));
+        DefaultListModel<String> model = new DefaultListModel<>();
+        exibicao.forEach(model::addElement);
+        JList<String> list = new JList<>(model);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane sp = new JScrollPane(list);
         sp.setPreferredSize(new Dimension(360, 220));
@@ -176,25 +178,27 @@ public class UIController implements GameObserver {
                 int valorHotel = game.getValorHotelAqui(indiceJogador);
 
                 if (podeCasa && podeHotel) {
-                    Object[] options = {
+                    List<String> options = List.of(
                             "Casa (R$ " + valorCasa + ")",
                             "Hotel (R$ " + valorHotel + ")",
                             "Cancelar"
-                    };
-                    int choice = JOptionPane.showOptionDialog(
+                    );
+                    String escolha = (String) JOptionPane.showInputDialog(
                             board,
                             "Escolha o que construir nesta propriedade:",
                             "Construir",
-                            JOptionPane.DEFAULT_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
                             null,
-                            options,
-                            options[0]
+                            options.toArray(new String[0]), // JOptionPane exige varargs/array
+                            options.get(0)
                     );
-                    if (choice == 0 && game.getSaldo(indiceJogador) >= valorCasa) {
-                        game.construirCasaNoLocal(indiceJogador);
-                    } else if (choice == 1 && game.getSaldo(indiceJogador) >= valorHotel) {
-                        game.construirHotelNoLocal(indiceJogador);
+                    if (escolha != null) {
+                        int idxEscolha = options.indexOf(escolha);
+                        if (idxEscolha == 0 && game.getSaldo(indiceJogador) >= valorCasa) {
+                            game.construirCasaNoLocal(indiceJogador);
+                        } else if (idxEscolha == 1 && game.getSaldo(indiceJogador) >= valorHotel) {
+                            game.construirHotelNoLocal(indiceJogador);
+                        }
                     }
                 } else if (podeHotel) {
                     if (game.getSaldo(indiceJogador) >= valorHotel) {

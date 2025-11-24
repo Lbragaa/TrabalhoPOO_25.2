@@ -8,15 +8,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-
+import java.util.Set;
 
 /** Diálogo de configuração da partida (3 passos):
  *  (1) quantidade de jogadores; (2) nomes (1..8) e cores distintas; (3) ordem sorteada.
  *  Retorna dados via getters após confirmar.
  */
-
 
 /** Diálogo de setup:
  *  1) número de jogadores (3..6)
@@ -38,7 +38,7 @@ public class PlayerSetupDialog extends JDialog {
     private final List<ColorItem> palette = defaultPalette();
 
     // step 3 (ordem)
-    private JList<String> ordemList;
+    private JPanel ordemPanel;
 
     private boolean confirmed = false;
     private int numJogadores = 3;
@@ -114,7 +114,9 @@ public class PlayerSetupDialog extends JDialog {
             nameField.setDocument(new LimitedDocument(8)); // limita a 8 chars
             nameFields.add(nameField);
 
-            JComboBox<ColorItem> cb = new JComboBox<>(palette.toArray(new ColorItem[0]));
+            DefaultComboBoxModel<ColorItem> model = new DefaultComboBoxModel<>();
+            palette.forEach(model::addElement);
+            JComboBox<ColorItem> cb = new JComboBox<>(model);
             cb.setRenderer(new ColorCellRenderer());
             // pré-seleciona cores distintas (0..5) para evitar repetição inicial
             cb.setSelectedIndex(Math.min(i, palette.size()-1));
@@ -144,7 +146,7 @@ public class PlayerSetupDialog extends JDialog {
         // valida nomes + cores
         List<Color> chosenColors = new ArrayList<>(n);
         List<String> chosenNames  = new ArrayList<>(n);
-        boolean[] used = new boolean[palette.size()];
+        Set<Integer> used = new HashSet<>();
 
         for (int i = 0; i < n; i++) {
             String nome = nameFields.get(i).getText().trim();
@@ -157,8 +159,8 @@ public class PlayerSetupDialog extends JDialog {
             ColorItem item = (ColorItem) colorBoxes.get(i).getSelectedItem();
             if (item == null) { showMsg("Selecione todas as cores."); return; }
             int idx = palette.indexOf(item);
-            if (idx >= 0 && used[idx]) { showMsg("As cores não podem se repetir."); return; }
-            if (idx >= 0) used[idx] = true;
+            if (idx >= 0 && used.contains(idx)) { showMsg("As cores não podem se repetir."); return; }
+            if (idx >= 0) used.add(idx);
             chosenColors.add(item.color());
         }
 
@@ -171,13 +173,16 @@ public class PlayerSetupDialog extends JDialog {
         shuffleList(ordemSorteada, new Random());
 
         // monta lista visível
-        DefaultListModel<String> model = new DefaultListModel<>();
+        ordemPanel.removeAll();
         for (int pos = 0; pos < n; pos++) {
             int j = ordemSorteada.get(pos);
             String corNome = colorName(coresEscolhidas.get(j));
-            model.addElement((pos+1) + "º - " + nomesEscolhidos.get(j) + " (" + corNome + ")");
+            JLabel lbl = new JLabel((pos+1) + "º - " + nomesEscolhidos.get(j) + " (" + corNome + ")");
+            lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+            ordemPanel.add(lbl);
         }
-        ordemList.setModel(model);
+        ordemPanel.revalidate();
+        ordemPanel.repaint();
 
         cards.show(cardPanel, "order");
     }
@@ -185,9 +190,11 @@ public class PlayerSetupDialog extends JDialog {
     // ---- STEP 3 ----
     private void buildStep3() {
         JPanel p = boxPanel("Ordem sorteada");
-        ordemList = new JList<>(new DefaultListModel<>());
-        ordemList.setVisibleRowCount(6);
-        p.add(new JScrollPane(ordemList), gbcSpan(0,0,1,1, GridBagConstraints.CENTER));
+        ordemPanel = new JPanel();
+        ordemPanel.setLayout(new BoxLayout(ordemPanel, BoxLayout.Y_AXIS));
+        JScrollPane sp = new JScrollPane(ordemPanel);
+        sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        p.add(sp, gbcSpan(0,0,1,1, GridBagConstraints.CENTER));
 
         JButton ok = new JButton("Iniciar partida");
         ok.addActionListener(e -> { confirmed = true; dispose(); });

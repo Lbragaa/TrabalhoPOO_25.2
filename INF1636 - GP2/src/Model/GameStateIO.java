@@ -6,25 +6,26 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
 
 /** Responsável por salvar/carregar o estado da partida em arquivo texto ASCII. */
 final class GameStateIO {
     private GameStateIO() {}
 
     // Paleta fixa alinhada aos pinos (0..5)
-    private static final java.awt.Color[] PIN_PALETTE = new java.awt.Color[] {
+    private static final List<java.awt.Color> PIN_PALETTE = List.of(
             java.awt.Color.RED, java.awt.Color.BLUE, java.awt.Color.ORANGE,
             java.awt.Color.YELLOW, java.awt.Color.PINK, java.awt.Color.GRAY
-    };
+    );
 
     private static int colorToIndex(java.awt.Color c) {
         if (c == null) return 0;
-        for (int i = 0; i < PIN_PALETTE.length; i++) if (PIN_PALETTE[i].equals(c)) return i;
+        for (int i = 0; i < PIN_PALETTE.size(); i++) if (PIN_PALETTE.get(i).equals(c)) return i;
         return 0;
     }
     private static java.awt.Color indexToColor(int idx) {
-        if (idx < 0 || idx >= PIN_PALETTE.length) return PIN_PALETTE[0];
-        return PIN_PALETTE[idx];
+        if (idx < 0 || idx >= PIN_PALETTE.size()) return PIN_PALETTE.get(0);
+        return PIN_PALETTE.get(idx);
     }
 
     static void salvar(GameStateSnapshot snapshot, File arquivo) throws IOException {
@@ -69,14 +70,15 @@ final class GameStateIO {
             if (ln.startsWith("PLAYERS=")) { nPlayers = Integer.parseInt(ln.substring(8)); continue; }
             if (ln.equals("PROPS")) { break; }
             if (ln.startsWith("PLAYER|")) {
-                String[] p = ln.split("\\|");
-                String nome = p[1];
-                int saldo = Integer.parseInt(p[2]);
-                int pos = Integer.parseInt(p[3]);
-                boolean preso = "1".equals(p[4]);
-                boolean falido = "1".equals(p[5]);
-                int cartas = Integer.parseInt(p[6]);
-                int corIndex = Integer.parseInt(p[7]);
+                StringTokenizer tok = new StringTokenizer(ln, "|");
+                tok.nextToken(); // "PLAYER"
+                String nome = tok.nextToken();
+                int saldo = Integer.parseInt(tok.nextToken());
+                int pos = Integer.parseInt(tok.nextToken());
+                boolean preso = "1".equals(tok.nextToken());
+                boolean falido = "1".equals(tok.nextToken());
+                int cartas = Integer.parseInt(tok.nextToken());
+                int corIndex = Integer.parseInt(tok.nextToken());
                 players.add(new GameStateSnapshot.PlayerData(nome, corIndex, saldo, pos, preso, falido, cartas));
             }
         }
@@ -84,20 +86,26 @@ final class GameStateIO {
             String ln = it.next().trim();
             if (ln.equals("DECK")) break;
             if (ln.startsWith("PROP|")) {
-                String[] p = ln.split("\\|");
+                StringTokenizer tok = new StringTokenizer(ln, "|");
+                tok.nextToken(); // "PROP"
                 props.add(new GameStateSnapshot.PropertyData(
-                        Integer.parseInt(p[1]),
-                        Integer.parseInt(p[2]),
-                        Integer.parseInt(p[3]),
-                        Integer.parseInt(p[4])
+                        Integer.parseInt(tok.nextToken()),
+                        Integer.parseInt(tok.nextToken()),
+                        Integer.parseInt(tok.nextToken()),
+                        Integer.parseInt(tok.nextToken())
                 ));
             }
         }
         while (it.hasNext()) {
             String ln = it.next().trim();
             if (ln.startsWith("CARD|")) {
-                String[] p = ln.split("\\|");
-                deck.add(new Carta(TipoCarta.valueOf(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3])));
+                StringTokenizer tok = new StringTokenizer(ln, "|");
+                tok.nextToken(); // "CARD"
+                deck.add(new Carta(
+                        TipoCarta.valueOf(tok.nextToken()),
+                        Integer.parseInt(tok.nextToken()),
+                        Integer.parseInt(tok.nextToken())
+                ));
             }
         }
 
@@ -118,11 +126,24 @@ final class GameStateIO {
     }
 
     private static List<Integer> parseIntList(String s) {
-        String[] parts = s.split(",");
-        List<Integer> out = new ArrayList<>(parts.length);
-        for (String part : parts) {
-            String trimmed = part.trim();
-            if (!trimmed.isEmpty()) out.add(Integer.parseInt(trimmed));
+        List<Integer> out = new ArrayList<>();
+        int acc = 0;
+        boolean inNumber = false, negative = false;
+        for (int i = 0; i <= s.length(); i++) {
+            char ch = (i < s.length() ? s.charAt(i) : ',');
+            if (ch == ',' || ch == ' ' || ch == '\t') {
+                if (inNumber) {
+                    out.add(negative ? -acc : acc);
+                    acc = 0;
+                    inNumber = false;
+                    negative = false;
+                }
+            } else if (ch == '-') {
+                negative = true;
+            } else if (Character.isDigit(ch)) {
+                acc = acc * 10 + (ch - '0');
+                inNumber = true;
+            }
         }
         return out;
     }

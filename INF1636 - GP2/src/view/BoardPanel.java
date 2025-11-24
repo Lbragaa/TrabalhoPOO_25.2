@@ -6,6 +6,9 @@ import infra.UiState;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Painel do tabuleiro: desenha imagem base, badge do jogador da vez
@@ -16,7 +19,7 @@ public class BoardPanel extends JPanel {
     private final UiState ui;
 
     // pin images 0..5 (Red, Blue, Orange, Yellow, Pink, Gray)
-    private final BufferedImage[] pinImgs = new BufferedImage[6];
+    private final List<BufferedImage> pinImgs = new ArrayList<>(Collections.nCopies(6, null));
     private static final int PIN_W = 25, PIN_H = 38;
     private static final int PIN_Y_BIAS = 6; // ponta do pino “encaixa” no anel da casa
 
@@ -29,8 +32,8 @@ public class BoardPanel extends JPanel {
         setOpaque(true);
 
         // carrega sprites de pinos
-        for (int i = 0; i < pinImgs.length; i++) {
-            pinImgs[i] = ImageStore.load("/pinos/pin" + i + ".png");
+        for (int i = 0; i < pinImgs.size(); i++) {
+            pinImgs.set(i, ImageStore.load("/pinos/pin" + i + ".png"));
         }
     }
 
@@ -71,7 +74,7 @@ public class BoardPanel extends JPanel {
 
                 int pinIdx = safePinIndex(j);
 
-                BufferedImage pin = (pinIdx >=0 && pinIdx < pinImgs.length) ? pinImgs[pinIdx] : null;
+                BufferedImage pin = (pinIdx >=0 && pinIdx < pinImgs.size()) ? pinImgs.get(pinIdx) : null;
                 if (pin != null) {
                     int drawX = px - PIN_W/2;
                     int drawY = py - PIN_H + PIN_Y_BIAS;

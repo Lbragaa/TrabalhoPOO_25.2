@@ -5,6 +5,9 @@ import infra.ImageStore;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /** Barra dos dados: forçar valores, lançar e rolar aleatoriamente, com faces desenhadas em um canvas próprio. */
 public class DicePanel extends JPanel {
@@ -13,7 +16,7 @@ public class DicePanel extends JPanel {
     private final JButton randomBtn;      // rolagem aleatória
 
     // imagens das faces 1..6
-    private final BufferedImage[] faces = new BufferedImage[7];
+    private final List<BufferedImage> faces = new ArrayList<>(Collections.nCopies(7, null));
 
     // último resultado mostrado
     private int faceLeft = 1, faceRight = 1;
@@ -47,9 +50,12 @@ public class DicePanel extends JPanel {
         c.anchor = GridBagConstraints.WEST;
 
         // --- combos 1..6 ---
-        Integer[] values = {1, 2, 3, 4, 5, 6};
-        d1 = new JComboBox<>(values);
-        d2 = new JComboBox<>(values);
+        List<Integer> values = List.of(1, 2, 3, 4, 5, 6);
+        DefaultComboBoxModel<Integer> model1 = new DefaultComboBoxModel<>();
+        DefaultComboBoxModel<Integer> model2 = new DefaultComboBoxModel<>();
+        values.forEach(v -> { model1.addElement(v); model2.addElement(v); });
+        d1 = new JComboBox<>(model1);
+        d2 = new JComboBox<>(model2);
 
         // deixa claro para o LAF quanto espaço reservar
         d1.setPrototypeDisplayValue(6);
@@ -58,7 +64,7 @@ public class DicePanel extends JPanel {
         d1.setFocusable(false);
         d2.setFocusable(false);
 
-        // opcional: largura mínima para evitar “...”/corte estranho
+        // opcional: largura mínima para evitar “…”/corte estranho
         Dimension comboSize = new Dimension(45, d1.getPreferredSize().height);
         d1.setPreferredSize(comboSize);
         d2.setPreferredSize(comboSize);
@@ -75,7 +81,7 @@ public class DicePanel extends JPanel {
 
         // carrega faces 1..6
         for (int i = 1; i <= 6; i++) {
-            faces[i] = ImageStore.load("/dados/die_face_" + i + ".png");
+            faces.set(i, ImageStore.load("/dados/die_face_" + i + ".png"));
         }
 
         // linha de controles (GridBag) + canvas na direita
@@ -91,7 +97,6 @@ public class DicePanel extends JPanel {
         c.anchor = GridBagConstraints.WEST;  // encosta nos botões
         c.insets = new Insets(2, 4, 2, 2);   // reduz o espaço lateral
         add(diceCanvas, c);
-
     }
 
     // --- API usada pelo controller ---
@@ -115,7 +120,7 @@ public class DicePanel extends JPanel {
     }
 
     private void drawFace(Graphics2D g2, int face, int x, int y, int size) {
-        BufferedImage img = (face >= 1 && face <= 6) ? faces[face] : null;
+        BufferedImage img = (face >= 1 && face <= 6) ? faces.get(face) : null;
         if (img != null) {
             g2.drawImage(img, x, y, size, size, null); // drawImage (exigência do enunciado)
         } else {
